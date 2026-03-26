@@ -1,0 +1,610 @@
+{% extends 'base.html' %}
+{% block title %}Nova venda{% endblock %}
+{% block topbar_title %}Nova venda{% endblock %}
+{% block content %}
+<style>
+    .venda-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+    .sticky-summary { position: sticky; top: 90px; }
+    .table-card { border: 1px solid #e9ecef; border-radius: 16px; overflow: hidden; background: #fff; }
+    .table-card .table { margin-bottom: 0; }
+    .table-card thead th { font-size: .8rem; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; background: #f8f9fa; }
+    .table-card tbody td { vertical-align: middle; }
+    .compact-input, .compact-select { min-width: 0; }
+    .produto-select-cell { min-width: 0; }
+    .tabela-produtos { table-layout: fixed; width: 100%; }
+    .tabela-produtos col.col-produto { width: 48%; }
+    .tabela-produtos col.col-und { width: 5%; }
+    .tabela-produtos col.col-estoque { width: 6%; }
+    .tabela-produtos col.col-qtd { width: 5%; }
+    .tabela-produtos col.col-valor { width: 8%; }
+    .tabela-produtos col.col-desc-tipo { width: 6%; }
+    .tabela-produtos col.col-desc-valor { width: 7%; }
+    .tabela-produtos col.col-total { width: 10%; }
+    .tabela-produtos col.col-acao { width: 5%; }
+    .tabela-produtos thead th, .tabela-produtos tbody td { padding: .3rem .3rem; }
+    .tabela-produtos .form-control, .tabela-produtos .form-select {
+        height: 30px;
+        min-height: 30px;
+        font-size: .72rem;
+        padding: .14rem .26rem;
+        line-height: 1.1;
+    }
+    .tabela-produtos .produto-select {
+        height: 30px;
+        font-size: .8rem;
+        padding-left: .28rem;
+        padding-right: 1.2rem;
+    }
+    .tabela-produtos .produto-select-cell .form-select { padding-right: 1.35rem; }
+    .tabela-produtos .unidade-view, .tabela-produtos .estoque-view, .tabela-produtos .total-item { text-align: center; }
+    .tabela-produtos .total-item { font-weight: 600; }
+    .tabela-produtos th, .tabela-produtos td { overflow: hidden; }
+    .tabela-produtos th { white-space: nowrap; }
+    .tabela-produtos th:nth-child(n+2), .tabela-produtos td:nth-child(n+2) { font-size: .76rem; }
+    .tabela-pagamentos .form-control, .tabela-pagamentos .form-select {
+        height: 30px;
+        min-height: 30px;
+        font-size: .78rem;
+        padding: .2rem .35rem;
+    }
+    .badge-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: .82rem; line-height: 1.1; }
+    .badge-status.info { background: #eef5ff; color: #2457c5; }
+    .badge-status.warning { background: #fff3cd; color: #8a6d1f; }
+    .badge-status.danger { background: #f8d7da; color: #842029; }
+    .summary-card { border: 1px solid #e9ecef; border-radius: 18px; box-shadow: 0 0.5rem 1rem rgba(15, 23, 42, .06); }
+    .summary-line { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px dashed #e9ecef; }
+    .summary-line:last-child { border-bottom: 0; }
+    .summary-total { font-size: 1.2rem; font-weight: 700; }
+    .summary-diff.ok { color: #198754; }
+    .summary-diff.warn { color: #dc3545; }
+    .section-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .table-footer-note { font-size: .88rem; color: #6c757d; }
+    .negative-stock-text {
+        font-size: .66rem;
+        margin-top: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .remove-btn {
+        white-space: nowrap;
+        padding: .16rem .28rem;
+        min-width: 30px;
+        height: 28px;
+        font-size: .67rem;
+        line-height: 1;
+    }
+    @media (max-width: 1400px), (max-height: 800px) {
+        .venda-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+        .summary-card .card-body { padding: 1rem; }
+        .summary-line { gap: 8px; padding: 8px 0; }
+        .summary-total { font-size: 1.08rem; }
+        .tabela-produtos thead th, .tabela-produtos tbody td { padding: .24rem .24rem; }
+        .tabela-produtos .form-control, .tabela-produtos .form-select {
+            height: 28px;
+            min-height: 28px;
+            font-size: .68rem;
+            padding: .1rem .22rem;
+        }
+        .tabela-produtos .produto-select {
+            font-size: .78rem;
+            padding-right: 1.1rem;
+        }
+        .tabela-produtos .negative-stock-text { font-size: .62rem; }
+        .remove-btn {
+            min-width: 28px;
+            height: 26px;
+            font-size: .62rem;
+            padding: .12rem .22rem;
+        }
+    }
+    @media (max-width: 1199px) {
+        .venda-grid { grid-template-columns: 1fr; }
+        .sticky-summary { position: static; }
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="mb-0">Nova venda</h3>
+        <div class="text-muted small">Versão compacta para validar tabela de itens, desconto por produto e pagamentos mais enxutos.</div>
+    </div>
+    <a href="{{ url_for('vendas') }}" class="btn btn-outline-secondary">Ver vendas</a>
+</div>
+
+<form method="post" id="form-venda">
+    <div class="venda-grid">
+        <div>
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-lg-8">
+                            <label class="form-label">Cliente</label>
+                            <select class="form-select" name="cliente_id" id="cliente_id" required>
+                                <option value="">Selecione</option>
+                                {% for cliente in clientes %}
+                                <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-4">
+                            <label class="form-label">Observações</label>
+                            <input type="text" class="form-control" name="observacoes" placeholder="Opcional">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="section-title">
+                        <div>
+                            <h5 class="mb-0">Produtos</h5>
+                            <div class="table-footer-note">Os itens entram em tabela para não crescer verticalmente quando houver muitos produtos.</div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="add-item">Adicionar produto</button>
+                    </div>
+
+                    <div class="table-card table-responsive">
+                        <table class="table align-middle tabela-produtos">
+                            <colgroup>
+                                <col class="col-produto">
+                                <col class="col-und">
+                                <col class="col-estoque">
+                                <col class="col-qtd">
+                                <col class="col-valor">
+                                <col class="col-desc-tipo">
+                                <col class="col-desc-valor">
+                                <col class="col-total">
+                                <col class="col-acao">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="col-produto">Produto</th>
+                                    <th class="col-und">Und</th>
+                                    <th class="col-estoque">Estoque</th>
+                                    <th class="col-qtd">Qtd</th>
+                                    <th class="col-valor">Vlr unit.</th>
+                                    <th class="col-desc-tipo">Desc.</th>
+                                    <th class="col-desc-valor">Desc.</th>
+                                    <th class="col-total">Total item</th>
+                                    <th class="col-acao"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itens-container">
+                                <tr class="item-venda">
+                                    <td class="produto-select-cell col-produto">
+                                        <select class="form-select form-select-sm produto-select" name="produto_id[]" required>
+                                            <option value="">Selecione</option>
+                                            {% for produto in produtos %}
+                                            <option value="{{ produto.id }}"
+                                                    data-preco="{{ produto.preco_venda }}"
+                                                    data-unidade="{{ produto.unidade }}"
+                                                    data-estoque="{{ produto.estoque_atual }}">
+                                                {{ produto.descricao }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="negative-stock-text estoque-msg text-muted"></div>
+                                    </td>
+                                    <td class="col-und">
+                                        <input type="text" class="form-control form-control-sm unidade-view" readonly value="-">
+                                    </td>
+                                    <td class="col-estoque">
+                                        <input type="text" class="form-control form-control-sm estoque-view" readonly value="0">
+                                    </td>
+                                    <td class="col-qtd">
+                                        <input type="text" class="form-control form-control-sm quantidade-input compact-input" name="quantidade[]" inputmode="decimal" placeholder="0" required>
+                                    </td>
+                                    <td class="col-valor">
+                                        <input type="text" class="form-control form-control-sm valor-input compact-input" name="valor_unitario[]" inputmode="decimal" placeholder="0,00" required>
+                                    </td>
+                                    <td class="col-desc-tipo">
+                                        <select class="form-select form-select-sm desconto-item-tipo compact-select" name="desconto_item_tipo[]">
+                                            <option value="valor">R$</option>
+                                            <option value="percentual">%</option>
+                                        </select>
+                                    </td>
+                                    <td class="col-desc-valor">
+                                        <input type="text" class="form-control form-control-sm desconto-item-valor compact-input" name="desconto_item_valor[]" inputmode="decimal" value="0,00">
+                                    </td>
+                                    <td class="col-total">
+                                        <input type="text" class="form-control form-control-sm total-item" readonly value="0,00">
+                                    </td>
+                                    <td class="col-acao">
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-item remove-btn" title="Remover item" aria-label="Remover item">×</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="section-title">
+                        <div>
+                            <h5 class="mb-0">Condição de pagamento</h5>
+                            <div class="table-footer-note">Em vez de blocos grandes, cada lançamento entra em uma linha compacta.</div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="add-payment">Adicionar lançamento</button>
+                    </div>
+
+                    <div class="table-card table-responsive">
+                        <table class="table align-middle tabela-pagamentos">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:260px;">Condição</th>
+                                    <th>Parcelas</th>
+                                    <th>Valor</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="payments-container">
+                                <tr class="payment-entry">
+                                    <td>
+                                        <select class="form-select form-select-sm pagamento-condicao" name="pagamento_condicao_id[]" required>
+                                            <option value="">Selecione</option>
+                                            {% for condicao in condicoes %}
+                                            <option value="{{ condicao.id }}" data-parcelas="{{ condicao.parcelas or 0 }}">
+                                                {{ condicao.nome }}{% if condicao.parcelas %} - {{ condicao.parcelas }}x{% endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm parcelas-view" readonly value="-">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm pagamento-valor" name="pagamento_valor[]" inputmode="decimal" placeholder="0,00" required>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-payment remove-btn" title="Remover lançamento" aria-label="Remover lançamento">×</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-footer-note mt-2">A soma dos lançamentos precisa fechar exatamente o valor total da venda antes de finalizar.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sticky-summary">
+            <div class="summary-card card">
+                <div class="card-body">
+                    <h5 class="mb-3">Resumo da venda</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">Desconto geral</label>
+                        <div class="input-group">
+                            <select class="form-select" id="desconto_tipo" name="desconto_tipo" style="max-width: 88px;">
+                                <option value="valor">R$</option>
+                                <option value="percentual">%</option>
+                            </select>
+                            <input type="text" class="form-control" name="desconto" id="desconto" inputmode="decimal" value="0,00">
+                        </div>
+                        <div class="form-text">O desconto geral é aplicado depois dos descontos por item.</div>
+                    </div>
+
+                    <div class="summary-line"><span>Subtotal bruto</span><strong id="subtotal_bruto">0,00</strong></div>
+                    <div class="summary-line"><span>Desc. itens</span><strong id="desconto_itens_total">0,00</strong></div>
+                    <div class="summary-line"><span>Subtotal líquido</span><strong id="subtotal_liquido">0,00</strong></div>
+                    <div class="summary-line"><span>Desc. geral</span><strong id="desconto_geral_total">0,00</strong></div>
+                    <div class="summary-line summary-total"><span>Total da venda</span><strong id="total_preview">0,00</strong></div>
+                    <div class="summary-line"><span>Total lançado</span><strong id="payments_total">0,00</strong></div>
+                    <div class="summary-line"><span>Diferença</span><strong id="payments_diff" class="summary-diff warn">0,00</strong></div>
+
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">Salvar venda</button>
+                        <a href="{{ url_for('vendas') }}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const itensContainer = document.getElementById("itens-container");
+    const paymentsContainer = document.getElementById("payments-container");
+    const addItemBtn = document.getElementById("add-item");
+    const addPaymentBtn = document.getElementById("add-payment");
+    const descontoInput = document.getElementById("desconto");
+    const descontoTipo = document.getElementById("desconto_tipo");
+    const form = document.getElementById("form-venda");
+
+    function numero(v) {
+        return Number(String(v || "0").replace(/\./g, "").replace(",", ".")) || 0;
+    }
+
+    function moeda(n) {
+        return Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function somenteDigite(campo) {
+        if (!campo) return;
+        campo.addEventListener("wheel", function (e) { e.preventDefault(); }, { passive: false });
+    }
+
+    function atualizarTituloProduto(select) {
+        if (!select) return;
+        const option = select.selectedOptions && select.selectedOptions[0];
+        select.title = option ? option.textContent.trim() : "";
+    }
+
+    function ajustarQuantidadePorUnidade(input, unidade) {
+        unidade = String(unidade || "").toLowerCase().trim();
+        if (["un", "und", "unidade", "unidades"].includes(unidade)) {
+            input.placeholder = "Ex.: 1";
+            input.setAttribute("data-tipo-quantidade", "inteiro");
+        } else if (["m", "mt", "mts", "metro", "metros"].includes(unidade)) {
+            input.placeholder = "Ex.: 1,5";
+            input.setAttribute("data-tipo-quantidade", "fracionado");
+        } else {
+            input.placeholder = "0";
+            input.setAttribute("data-tipo-quantidade", "livre");
+        }
+    }
+
+    function calcularDescontoItem(bruto, tipo, valor) {
+        const desconto = numero(valor);
+        if (tipo === "percentual") {
+            return Math.min((bruto * desconto) / 100, bruto);
+        }
+        return Math.min(desconto, bruto);
+    }
+
+    function atualizarResumoPagamento(totalVenda) {
+        let totalLancado = 0;
+        document.querySelectorAll(".pagamento-valor").forEach(function (input) {
+            totalLancado += numero(input.value);
+        });
+
+        const diferenca = totalVenda - totalLancado;
+        document.getElementById("payments_total").textContent = moeda(totalLancado);
+        const diffEl = document.getElementById("payments_diff");
+        diffEl.textContent = moeda(Math.abs(diferenca));
+        diffEl.classList.remove("ok", "warn");
+        diffEl.classList.add(Math.abs(diferenca) <= 0.009 ? "ok" : "warn");
+    }
+
+    function atualizarTotais() {
+        let subtotalBruto = 0;
+        let totalDescontoItens = 0;
+
+        document.querySelectorAll(".item-venda").forEach(function (row) {
+            const qtd = numero(row.querySelector(".quantidade-input")?.value);
+            const valor = numero(row.querySelector(".valor-input")?.value);
+            const bruto = qtd * valor;
+            const descontoTipoItem = row.querySelector(".desconto-item-tipo")?.value || "valor";
+            const descontoValorItem = row.querySelector(".desconto-item-valor")?.value || "0,00";
+            const descontoItem = calcularDescontoItem(bruto, descontoTipoItem, descontoValorItem);
+            const liquido = Math.max(bruto - descontoItem, 0);
+
+            subtotalBruto += bruto;
+            totalDescontoItens += descontoItem;
+
+            const totalItem = row.querySelector(".total-item");
+            if (totalItem) totalItem.value = moeda(liquido);
+        });
+
+        const subtotalLiquido = Math.max(subtotalBruto - totalDescontoItens, 0);
+        const descontoGeral = calcularDescontoItem(subtotalLiquido, descontoTipo.value, descontoInput.value);
+        const totalVenda = Math.max(subtotalLiquido - descontoGeral, 0);
+
+        document.getElementById("subtotal_bruto").textContent = moeda(subtotalBruto);
+        document.getElementById("desconto_itens_total").textContent = moeda(totalDescontoItens);
+        document.getElementById("subtotal_liquido").textContent = moeda(subtotalLiquido);
+        document.getElementById("desconto_geral_total").textContent = moeda(descontoGeral);
+        document.getElementById("total_preview").textContent = moeda(totalVenda);
+
+        atualizarResumoPagamento(totalVenda);
+    }
+
+    async function atualizarEstoqueLinha(row) {
+        const produtoSelect = row.querySelector(".produto-select");
+        const quantidadeInput = row.querySelector(".quantidade-input");
+        const valorInput = row.querySelector(".valor-input");
+        const estoqueView = row.querySelector(".estoque-view");
+        const unidadeView = row.querySelector(".unidade-view");
+        const estoqueMsg = row.querySelector(".estoque-msg");
+
+        if (!produtoSelect || !quantidadeInput) return;
+
+        estoqueMsg.className = "negative-stock-text estoque-msg text-muted";
+        estoqueMsg.textContent = "";
+        estoqueView.value = "0";
+        unidadeView.value = "-";
+
+        const produtoId = produtoSelect.value;
+        if (!produtoId) {
+            atualizarTotais();
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/produto/${produtoId}/estoque`);
+            const data = await response.json();
+            if (!data.ok) return;
+
+            estoqueView.value = Number(data.estoque || 0);
+            unidadeView.value = data.unidade || "-";
+            ajustarQuantidadePorUnidade(quantidadeInput, data.unidade || "");
+
+            if (!valorInput.value) {
+                valorInput.value = moeda(data.preco || 0);
+            }
+
+            const qtd = numero(quantidadeInput.value);
+            const estoqueAtual = Number(data.estoque || 0);
+            const saldo = estoqueAtual - qtd;
+
+            if (qtd > 0 && qtd > estoqueAtual) {
+                if (data.permite_estoque_negativo) {
+                    estoqueMsg.className = "negative-stock-text estoque-msg text-warning";
+                    estoqueMsg.textContent = `Ficará com estoque negativo: ${saldo}`;
+                } else {
+                    estoqueMsg.className = "negative-stock-text estoque-msg text-danger";
+                    estoqueMsg.textContent = `Bloqueio de estoque: disponível ${estoqueAtual} e solicitado ${qtd}.`;
+                }
+            } else {
+                estoqueMsg.className = "negative-stock-text estoque-msg text-muted";
+                estoqueMsg.textContent = `Saldo após venda: ${saldo}`;
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        atualizarTotais();
+    }
+
+    function bindItemRow(row) {
+        const produtoSelect = row.querySelector(".produto-select");
+        const quantidadeInput = row.querySelector(".quantidade-input");
+        const valorInput = row.querySelector(".valor-input");
+        const descontoValor = row.querySelector(".desconto-item-valor");
+        const descontoTipoItem = row.querySelector(".desconto-item-tipo");
+        const removeBtn = row.querySelector(".remove-item");
+
+        [quantidadeInput, valorInput, descontoValor].forEach(somenteDigite);
+
+        if (produtoSelect) {
+            atualizarTituloProduto(produtoSelect);
+            produtoSelect.addEventListener("change", function () {
+                atualizarTituloProduto(produtoSelect);
+                if (!valorInput.value) {
+                    const selected = produtoSelect.selectedOptions[0];
+                    if (selected && selected.dataset.preco) {
+                        valorInput.value = moeda(selected.dataset.preco);
+                    }
+                }
+                atualizarEstoqueLinha(row);
+            });
+        }
+
+        if (quantidadeInput) {
+            quantidadeInput.addEventListener("input", function () { atualizarEstoqueLinha(row); });
+            quantidadeInput.addEventListener("blur", function () {
+                const tipo = quantidadeInput.getAttribute("data-tipo-quantidade");
+                let valor = String(quantidadeInput.value || "").trim().replace(",", ".");
+                if (!valor) return;
+                if (tipo === "inteiro") {
+                    quantidadeInput.value = String(parseInt(Number(valor) || 0, 10));
+                }
+                atualizarEstoqueLinha(row);
+            });
+        }
+
+        [valorInput, descontoValor].forEach(function (input) {
+            if (input) input.addEventListener("input", atualizarTotais);
+        });
+        if (descontoTipoItem) descontoTipoItem.addEventListener("change", atualizarTotais);
+
+        if (removeBtn) {
+            removeBtn.addEventListener("click", function () {
+                const rows = document.querySelectorAll(".item-venda");
+                if (rows.length > 1) {
+                    row.remove();
+                    atualizarTotais();
+                } else {
+                    row.querySelectorAll("input").forEach(i => i.value = "");
+                    row.querySelectorAll("select").forEach(s => {
+                        if (s.classList.contains("desconto-item-tipo")) {
+                            s.value = "valor";
+                        } else {
+                            s.value = "";
+                        }
+                    });
+                    row.querySelector(".unidade-view").value = "-";
+                    row.querySelector(".estoque-view").value = "0";
+                    row.querySelector(".estoque-msg").textContent = "";
+                    atualizarTotais();
+                }
+            });
+        }
+    }
+
+    function bindPaymentRow(row) {
+        const valorInput = row.querySelector(".pagamento-valor");
+        const condicao = row.querySelector(".pagamento-condicao");
+        const parcelasView = row.querySelector(".parcelas-view");
+        const removeBtn = row.querySelector(".remove-payment");
+
+        somenteDigite(valorInput);
+        if (valorInput) valorInput.addEventListener("input", atualizarTotais);
+        if (condicao) {
+            condicao.addEventListener("change", function () {
+                const option = condicao.selectedOptions[0];
+                parcelasView.value = option && option.dataset.parcelas && option.dataset.parcelas !== "0" ? `${option.dataset.parcelas}x` : "-";
+            });
+        }
+
+        if (removeBtn) {
+            removeBtn.addEventListener("click", function () {
+                const rows = document.querySelectorAll(".payment-entry");
+                if (rows.length > 1) {
+                    row.remove();
+                    atualizarTotais();
+                } else {
+                    row.querySelectorAll("input").forEach(i => i.value = "");
+                    row.querySelectorAll("select").forEach(s => s.value = "");
+                    parcelasView.value = "-";
+                    atualizarTotais();
+                }
+            });
+        }
+    }
+
+    addItemBtn.addEventListener("click", function () {
+        const clone = document.querySelector(".item-venda").cloneNode(true);
+        clone.querySelectorAll("input").forEach(i => {
+            i.value = i.classList.contains("unidade-view") ? "-" : i.classList.contains("estoque-view") ? "0" : i.classList.contains("desconto-item-valor") ? "0,00" : "";
+        });
+        clone.querySelectorAll("select").forEach(s => {
+            s.value = s.classList.contains("desconto-item-tipo") ? "valor" : "";
+        });
+        clone.querySelector(".estoque-msg").textContent = "";
+        itensContainer.appendChild(clone);
+        bindItemRow(clone);
+        atualizarTotais();
+    });
+
+    addPaymentBtn.addEventListener("click", function () {
+        const clone = document.querySelector(".payment-entry").cloneNode(true);
+        clone.querySelectorAll("input").forEach(i => i.value = "");
+        clone.querySelectorAll("select").forEach(s => s.value = "");
+        clone.querySelector(".parcelas-view").value = "-";
+        paymentsContainer.appendChild(clone);
+        bindPaymentRow(clone);
+        atualizarTotais();
+    });
+
+    document.querySelectorAll(".item-venda").forEach(bindItemRow);
+    document.querySelectorAll(".payment-entry").forEach(bindPaymentRow);
+    descontoInput.addEventListener("input", atualizarTotais);
+    descontoTipo.addEventListener("change", atualizarTotais);
+
+    form.addEventListener("submit", function (e) {
+        const totalVenda = numero(document.getElementById("total_preview").textContent);
+        const totalLancado = numero(document.getElementById("payments_total").textContent);
+        const hasBloqueio = Array.from(document.querySelectorAll(".estoque-msg")).some(el => el.textContent.includes("Bloqueio de estoque"));
+
+        if (hasBloqueio) {
+            e.preventDefault();
+            alert("Existe item com bloqueio de estoque. Ajuste antes de finalizar.");
+            return;
+        }
+
+        if (Math.abs(totalVenda - totalLancado) > 0.009) {
+            e.preventDefault();
+            alert(`Os pagamentos lançados somam R$ ${moeda(totalLancado)} e a venda totaliza R$ ${moeda(totalVenda)}. Ajuste antes de finalizar.`);
+        }
+    });
+
+    atualizarTotais();
+});
+</script>
+{% endblock %}

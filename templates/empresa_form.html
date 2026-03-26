@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Cadastro de Empresa{% endblock %}
+{% block topbar_title %}Cadastro de Empresa{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">{{ 'Editar empresa' if empresa else 'Nova empresa' }}</h3>
+    <a href="{{ url_for('empresas') }}" class="btn btn-outline-secondary">Voltar para listagem</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Nome fantasia</label>
+                <input type="text" class="form-control" name="nome_fantasia" value="{{ empresa.nome_fantasia if empresa else '' }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Razão social</label>
+                <input type="text" class="form-control" name="razao_social" value="{{ empresa.razao_social if empresa else '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">CNPJ</label>
+                <input type="text" class="form-control" name="cnpj" value="{{ empresa.cnpj if empresa else '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Telefone</label>
+                <input type="text" class="form-control" name="telefone" value="{{ empresa.telefone if empresa else '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">E-mail</label>
+                <input type="email" class="form-control" name="email" value="{{ empresa.email if empresa else '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Cidade</label>
+                <input type="text" class="form-control" name="cidade" value="{{ empresa.cidade if empresa else '' }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">UF</label>
+                <input type="text" class="form-control" maxlength="2" name="estado" value="{{ empresa.estado if empresa else '' }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Responsável</label>
+                <input type="text" class="form-control" name="responsavel" value="{{ empresa.responsavel if empresa else '' }}">
+            </div>
+            <div class="col-md-8">
+                <div class="form-check mt-4">
+                    <input class="form-check-input" type="checkbox" name="permite_estoque_negativo" id="permite_estoque_negativo" {% if empresa and empresa.permite_estoque_negativo %}checked{% endif %}>
+                    <label class="form-check-label" for="permite_estoque_negativo">
+                        Permitir venda com estoque negativo
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="ativo" id="ativo" {% if not empresa or empresa.ativo %}checked{% endif %}>
+                    <label class="form-check-label" for="ativo">Empresa ativa</label>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a href="{{ url_for('empresas') }}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

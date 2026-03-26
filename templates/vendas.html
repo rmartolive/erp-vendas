@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Vendas{% endblock %}
+{% block topbar_title %}Vendas{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Vendas</h3>
+    <a href="{{ url_for('vendas_nova') }}" class="btn btn-primary">Nova venda</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Forma</th>
+                    <th>Parcelas</th>
+                    <th>Bruto</th>
+                    <th>Líquido</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venda in vendas %}
+                <tr>
+                    <td>{{ venda.id }}</td>
+                    <td>{{ venda.data_venda.strftime('%d/%m/%Y') if venda.data_venda else '-' }}</td>
+                    <td>{{ venda.cliente or '-' }}</td>
+                    <td>{{ venda.condicao_pagamento or venda.forma_pagamento or '-' }}</td>
+                    <td>{{ venda.parcelas or 1 }}</td>
+                    <td>R$ {{ '%.2f'|format((venda.valor_bruto or 0)|float) }}</td>
+                    <td>R$ {{ '%.2f'|format((venda.valor_liquido or 0)|float) }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-muted py-4">Nenhuma venda cadastrada.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

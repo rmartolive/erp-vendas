@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Condições de Pagamento - ERP Vendas{% endblock %}
+{% block topbar_title %}Condições de Pagamento{% endblock %}
+
+{% block extra_head %}
+<style>
+    .condicoes-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 16px;
+    }
+
+    .condicoes-grid .col-12 { grid-column: span 12; }
+    .condicoes-grid .col-4 { grid-column: span 4; }
+    .condicoes-grid .col-3 { grid-column: span 3; }
+    .condicoes-grid .col-2 { grid-column: span 2; }
+    .condicoes-grid .col-1 { grid-column: span 1; }
+
+    .checkbox-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 38px;
+    }
+
+    .muted {
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    @media (max-width: 992px) {
+        .condicoes-grid .col-4,
+        .condicoes-grid .col-3,
+        .condicoes-grid .col-2,
+        .condicoes-grid .col-1 {
+            grid-column: span 12;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="mb-4">
+        <h2 class="mb-1">Condições de pagamento</h2>
+        <p class="text-muted mb-0">Cadastre e edite as formas de pagamento utilizadas nas vendas.</p>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <strong>Nova condição</strong>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('condicoes_pagamento_nova') }}">
+                <div class="condicoes-grid">
+                    <div class="col-4">
+                        <label class="form-label">Nome</label>
+                        <input type="text" name="nome" class="form-control" placeholder="Ex: Crédito 3x sem juros" required>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Forma de pagamento</label>
+                        <select name="forma_pagamento" class="form-select" required>
+                            <option value="">Selecione</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                            <option value="PIX">PIX</option>
+                            <option value="Débito">Débito</option>
+                            <option value="Crédito">Crédito</option>
+                            <option value="Boleto">Boleto</option>
+                        </select>
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">Parcelas</label>
+                        <input type="number" name="parcelas" class="form-control" min="1" value="1" required>
+                    </div>
+                    <div class="col-2">
+                        <label class="form-label">Intervalo (dias)</label>
+                        <input type="number" name="dias_intervalo" class="form-control" min="0" value="30" required>
+                    </div>
+                    <div class="col-1">
+                        <label class="form-label">Taxa %</label>
+                        <input type="number" name="taxa_percentual" class="form-control" step="0.01" min="0" value="0" required>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" name="ativo" id="ativo" class="form-check-input" checked>
+                            <label for="ativo" class="form-check-label">Ativa</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap mt-3">
+                    <button type="submit" class="btn btn-dark">Salvar condição</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Condições cadastradas</strong>
+        </div>
+        <div class="card-body">
+            {% if condicoes %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Forma</th>
+                            <th>Parcelas</th>
+                            <th>Intervalo</th>
+                            <th>Taxa %</th>
+                            <th>Ativa</th>
+                            <th style="min-width: 180px;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in condicoes %}
+                        <tr>
+                            <td>{{ c.id }}</td>
+                            <td colspan="7">
+                                <form method="POST" action="{{ url_for('condicoes_pagamento_editar', condicao_id=c.id) }}">
+                                    <div class="condicoes-grid">
+                                        <div class="col-4">
+                                            <label class="form-label">Nome</label>
+                                            <input type="text" name="nome" class="form-control" value="{{ c.nome }}" required>
+                                        </div>
+                                        <div class="col-2">
+                                            <label class="form-label">Forma</label>
+                                            <select name="forma_pagamento" class="form-select" required>
+                                                <option value="Dinheiro" {% if c.forma_pagamento == 'Dinheiro' %}selected{% endif %}>Dinheiro</option>
+                                                <option value="PIX" {% if c.forma_pagamento == 'PIX' %}selected{% endif %}>PIX</option>
+                                                <option value="Débito" {% if c.forma_pagamento == 'Débito' %}selected{% endif %}>Débito</option>
+                                                <option value="Crédito" {% if c.forma_pagamento == 'Crédito' %}selected{% endif %}>Crédito</option>
+                                                <option value="Boleto" {% if c.forma_pagamento == 'Boleto' %}selected{% endif %}>Boleto</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-1">
+                                            <label class="form-label">Parcelas</label>
+                                            <input type="number" name="parcelas" class="form-control" min="1" value="{{ c.parcelas }}" required>
+                                        </div>
+                                        <div class="col-2">
+                                            <label class="form-label">Intervalo</label>
+                                            <input type="number" name="dias_intervalo" class="form-control" min="0" value="{{ c.dias_intervalo }}" required>
+                                        </div>
+                                        <div class="col-1">
+                                            <label class="form-label">Taxa %</label>
+                                            <input type="number" name="taxa_percentual" class="form-control" step="0.01" min="0" value="{{ c.taxa_percentual }}" required>
+                                        </div>
+                                        <div class="col-1">
+                                            <label class="form-label">Ativa</label>
+                                            <div class="checkbox-wrap">
+                                                <input type="checkbox" name="ativo" class="form-check-input" {% if c.ativo %}checked{% endif %}>
+                                            </div>
+                                        </div>
+                                        <div class="col-1">
+                                            <label class="form-label">&nbsp;</label>
+                                            <button type="submit" class="btn btn-dark w-100">Salvar</button>
+                                        </div>
+                                    </div>
+                                    <div class="muted mt-2">Criada em: {{ c.created_at }}</div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <div class="alert alert-info mb-0">Nenhuma condição cadastrada.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Empresas{% endblock %}
+{% block topbar_title %}Empresas{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Empresas</h3>
+    <a href="{{ url_for('empresas_nova') }}" class="btn btn-primary">Nova empresa</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Nome fantasia</th>
+                    <th>CNPJ</th>
+                    <th>Cidade/UF</th>
+                    <th>Responsável</th>
+                    <th>Venda sem estoque</th>
+                    <th>Status</th>
+                    <th style="width: 120px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for empresa in empresas %}
+                <tr>
+                    <td>
+                        <strong>{{ empresa.nome_fantasia }}</strong>
+                        {% if empresa.razao_social %}
+                        <div class="text-muted small">{{ empresa.razao_social }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ empresa.cnpj or '-' }}</td>
+                    <td>{{ empresa.cidade or '-' }}{% if empresa.estado %}/{{ empresa.estado }}{% endif %}</td>
+                    <td>{{ empresa.responsavel or '-' }}</td>
+                    <td>
+                        {% if empresa.permite_estoque_negativo %}
+                            <span class="badge bg-warning text-dark">Sim</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark border">Não</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if empresa.ativo %}
+                            <span class="badge bg-success">Ativa</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inativa</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('empresas_editar', empresa_id=empresa.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">Nenhuma empresa cadastrada.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

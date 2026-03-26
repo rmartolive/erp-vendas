@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Editar Produto</h2>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Alterar dados do produto</strong>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+                        <label class="form-label">Código</label>
+                        <input type="text" name="codigo" class="form-control" value="{{ produto.codigo or '' }}">
+                    </div>
+
+                    <div class="col-md-5">
+                        <label class="form-label">Descrição *</label>
+                        <input type="text" name="descricao" class="form-control" value="{{ produto.descricao }}" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Categoria</label>
+                        <input type="text" name="categoria" class="form-control" value="{{ produto.categoria or '' }}">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Unidade</label>
+                        <input type="text" name="unidade" class="form-control" value="{{ produto.unidade or '' }}">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Custo</label>
+                        <input type="number" step="0.01" min="0" name="custo" class="form-control" value="{{ produto.custo or 0 }}">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Preço de venda</label>
+                        <input type="number" step="0.01" min="0" name="preco_venda" class="form-control" value="{{ produto.preco_venda or 0 }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Estoque atual</label>
+                        <input type="number" step="0.01" min="0" name="estoque_atual" class="form-control" value="{{ produto.estoque_atual or 0 }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Estoque mínimo</label>
+                        <input type="number" step="0.01" min="0" name="estoque_minimo" class="form-control" value="{{ produto.estoque_minimo or 0 }}">
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check">
+                            <input type="checkbox" name="ativo" class="form-check-input" {% if produto.ativo %}checked{% endif %}>
+                            <label class="form-check-label">Ativo</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button class="btn btn-dark w-100">
+                            <i class="bi bi-save"></i> Salvar
+                        </button>
+                        <a href="{{ url_for('produtos') }}" class="btn btn-secondary w-100">Voltar</a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
