@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block title %}Contas a pagar{% endblock %}
+{% block topbar_title %}Contas a pagar{% endblock %}
+{% block content %}
+<style>
+    @media (max-width: 991px) {
+        .mobile-stack-header {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 12px;
+        }
+
+        .mobile-stack-header .btn {
+            width: 100%;
+        }
+
+        .mobile-filter-actions {
+            flex-direction: column;
+        }
+
+        .mobile-card-table table,
+        .mobile-card-table thead,
+        .mobile-card-table tbody,
+        .mobile-card-table tr,
+        .mobile-card-table th,
+        .mobile-card-table td {
+            display: block;
+            width: 100%;
+        }
+
+        .mobile-card-table thead {
+            display: none;
+        }
+
+        .mobile-card-table tr {
+            border: 1px solid #e9ecef;
+            border-radius: 14px;
+            padding: .85rem;
+            margin-bottom: .85rem;
+            background: #fff;
+        }
+
+        .mobile-card-table td {
+            border: 0;
+            padding: 0;
+            margin-bottom: .75rem;
+        }
+
+        .mobile-card-table td:last-child {
+            margin-bottom: 0;
+        }
+
+        .mobile-card-table td[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            font-size: .72rem;
+            font-weight: 700;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: .3rem;
+        }
+
+        .mobile-card-table form {
+            flex-direction: column;
+        }
+
+        .mobile-card-table form input,
+        .mobile-card-table form button {
+            width: 100%;
+            max-width: none !important;
+        }
+
+        .mobile-card-table .empty-row {
+            text-align: center;
+            padding: 1rem 0;
+        }
+    }
+</style>
+<div class="d-flex justify-content-between align-items-center mb-3 mobile-stack-header">
+    <div>
+        <h3 class="mb-0">Contas a pagar</h3>
+        <div class="text-muted small">Acompanhe os vencimentos gerados pelas entradas de nota e faça a baixa quando houver pagamento.</div>
+    </div>
+    <a href="{{ url_for('entradas_notas_nova') }}" class="btn btn-primary">Nova entrada</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="text-muted small mb-1">Total pendente</div>
+                <div class="fs-4 fw-semibold">R$ {{ '%.2f'|format(total_pendente) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <div class="text-muted small mb-1">Total pago</div>
+                <div class="fs-4 fw-semibold">R$ {{ '%.2f'|format(total_pago) }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Filtros</strong></div>
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Fornecedor</label>
+                <select name="fornecedor_id" class="form-select">
+                    <option value="">Todos</option>
+                    {% for fornecedor in fornecedores %}
+                    <option value="{{ fornecedor.id }}" {% if fornecedor_id == fornecedor.id %}selected{% endif %}>{{ fornecedor.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="PENDENTE" {% if status == 'PENDENTE' %}selected{% endif %}>Pendente</option>
+                    <option value="PAGO" {% if status == 'PAGO' %}selected{% endif %}>Pago</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Venc. inicial</label>
+                <input type="date" name="data_ini" class="form-control" value="{{ data_ini }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Venc. final</label>
+                <input type="date" name="data_fim" class="form-control" value="{{ data_fim }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2 mobile-filter-actions">
+                <button class="btn btn-dark w-100">Filtrar</button>
+                <a href="{{ url_for('contas_pagar') }}" class="btn btn-outline-secondary w-100">Limpar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white"><strong>Títulos</strong></div>
+    <div class="card-body table-responsive mobile-card-table">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fornecedor</th>
+                    <th>Descrição</th>
+                    <th>Nota</th>
+                    <th>Parcela</th>
+                    <th>Vencimento</th>
+                    <th>Pagamento</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for conta in contas %}
+                <tr>
+                    <td data-label="ID">{{ conta.id }}</td>
+                    <td data-label="Fornecedor">{{ conta.fornecedor or '-' }}</td>
+                    <td data-label="Descrição">{{ conta.descricao or '-' }}</td>
+                    <td data-label="Nota">{{ conta.numero_nota or '-' }}</td>
+                    <td data-label="Parcela">{{ conta.numero_parcela }}</td>
+                    <td data-label="Vencimento">{{ conta.data_vencimento.strftime('%d/%m/%Y') if conta.data_vencimento else '-' }}</td>
+                    <td data-label="Pagamento">{{ conta.data_pagamento.strftime('%d/%m/%Y') if conta.data_pagamento else '-' }}</td>
+                    <td data-label="Valor">R$ {{ '%.2f'|format((conta.valor or 0)|float) }}</td>
+                    <td data-label="Status">
+                        {% if conta.status == 'PAGO' %}
+                        <span class="badge bg-success">Pago</span>
+                        {% elif conta.data_vencimento and conta.data_vencimento < hoje %}
+                        <span class="badge bg-danger">Vencido</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Pendente</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Ações">
+                        {% if conta.status != 'PAGO' and permite_baixar_contas_pagar %}
+                        <form method="POST" action="{{ url_for('contas_pagar_baixar', conta_id=conta.id) }}" class="d-flex gap-2">
+                            <input type="date" name="data_pagamento" class="form-control form-control-sm" value="{{ hoje.isoformat() }}" style="max-width: 150px;">
+                            <button class="btn btn-sm btn-outline-success">Baixar</button>
+                        </form>
+                        {% elif conta.status != 'PAGO' %}
+                        <span class="text-muted small">Sem permissão para baixa</span>
+                        {% else %}
+                        <span class="text-muted small">Quitado</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="10" class="text-center text-muted py-4 empty-row">Nenhuma conta encontrada.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

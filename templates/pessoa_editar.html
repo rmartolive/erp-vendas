@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Edição de Cliente</h2>
+        <h2>Edição de cadastro</h2>
         <a href="{{ url_for('pessoas') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Voltar
         </a>
@@ -11,13 +11,22 @@
 
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white">
-            <strong>Editar cliente</strong>
+            <strong>Editar cliente / fornecedor</strong>
         </div>
         <div class="card-body">
             <form method="POST">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label">Tipo{% if config.cliente_tipo_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <label class="form-label">Tipo de cadastro</label>
+                        <select name="tipo_cadastro" class="form-select">
+                            <option value="CLIENTE" {% if pessoa.tipo_cadastro == 'CLIENTE' %}selected{% endif %}>Cliente</option>
+                            <option value="FORNECEDOR" {% if pessoa.tipo_cadastro == 'FORNECEDOR' %}selected{% endif %}>Fornecedor</option>
+                            <option value="AMBOS" {% if pessoa.tipo_cadastro == 'AMBOS' %}selected{% endif %}>Ambos</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo de pessoa{% if config.cliente_tipo_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <select name="tipo" class="form-select">
                             <option value="FISICA" {% if pessoa.tipo == 'FISICA' %}selected{% endif %}>Física</option>
                             <option value="JURIDICA" {% if pessoa.tipo == 'JURIDICA' %}selected{% endif %}>Jurídica</option>
@@ -34,17 +43,17 @@
                         <input type="text" name="documento" class="form-control" value="{{ pessoa.documento or '' }}">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Telefone{% if config.cliente_telefone_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="telefone" class="form-control" value="{{ pessoa.telefone or '' }}">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">E-mail{% if config.cliente_email_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="email" name="email" class="form-control" value="{{ pessoa.email or '' }}">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">CEP{% if config.cliente_cep_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="cep" class="form-control" value="{{ pessoa.cep or '' }}">
                     </div>
@@ -77,9 +86,7 @@
                     </div>
 
                     <div class="col-md-3 d-flex align-items-end gap-2">
-                        <button class="btn btn-dark w-100">
-                            <i class="bi bi-save"></i> Salvar
-                        </button>
+                        <button class="btn btn-dark w-100"><i class="bi bi-save"></i> Salvar</button>
                         <a href="{{ url_for('pessoas') }}" class="btn btn-secondary w-100">Cancelar</a>
                     </div>
                 </div>

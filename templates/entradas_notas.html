@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}Entradas de nota{% endblock %}
+{% block topbar_title %}Entradas de nota{% endblock %}
+{% block content %}
+<style>
+    @media (max-width: 991px) {
+        .mobile-stack-header {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 12px;
+        }
+
+        .mobile-stack-header .btn {
+            width: 100%;
+        }
+
+        .mobile-filter-actions {
+            flex-direction: column;
+        }
+
+        .mobile-card-table table,
+        .mobile-card-table thead,
+        .mobile-card-table tbody,
+        .mobile-card-table tr,
+        .mobile-card-table th,
+        .mobile-card-table td {
+            display: block;
+            width: 100%;
+        }
+
+        .mobile-card-table thead {
+            display: none;
+        }
+
+        .mobile-card-table tr {
+            border: 1px solid #e9ecef;
+            border-radius: 14px;
+            padding: .85rem;
+            margin-bottom: .85rem;
+            background: #fff;
+        }
+
+        .mobile-card-table td {
+            border: 0;
+            padding: 0;
+            margin-bottom: .75rem;
+        }
+
+        .mobile-card-table td:last-child {
+            margin-bottom: 0;
+        }
+
+        .mobile-card-table td[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            font-size: .72rem;
+            font-weight: 700;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: .3rem;
+        }
+
+        .mobile-card-table .empty-row {
+            text-align: center;
+            padding: 1rem 0;
+        }
+    }
+</style>
+<div class="d-flex justify-content-between align-items-center mb-3 mobile-stack-header">
+    <div>
+        <h3 class="mb-0">Entradas de nota</h3>
+        {% if fornecedor_id and fornecedor_nome %}
+        <div class="text-muted small">Filtrado por fornecedor: {{ fornecedor_nome }}</div>
+        {% endif %}
+    </div>
+    <a href="{{ url_for('entradas_notas_nova') }}" class="btn btn-primary">Nova entrada</a>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white"><strong>Filtros</strong></div>
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Fornecedor</label>
+                <select name="fornecedor_id" class="form-select">
+                    <option value="">Todos</option>
+                    {% for fornecedor in fornecedores %}
+                    <option value="{{ fornecedor.id }}" {% if fornecedor_id == fornecedor.id %}selected{% endif %}>{{ fornecedor.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Data inicial</label>
+                <input type="date" name="data_ini" class="form-control" value="{{ data_ini }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Data final</label>
+                <input type="date" name="data_fim" class="form-control" value="{{ data_fim }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2 mobile-filter-actions">
+                <button class="btn btn-dark w-100">Filtrar</button>
+                <a href="{{ url_for('entradas_notas') }}" class="btn btn-outline-secondary w-100">Limpar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white"><strong>Listagem de notas</strong></div>
+    <div class="card-body table-responsive mobile-card-table">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Emissao</th>
+                    <th>Fornecedor</th>
+                    <th>Nota</th>
+                    <th>Condicao</th>
+                    <th>Parcelas</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Acoes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compra in compras %}
+                <tr>
+                    <td data-label="ID">{{ compra.id }}</td>
+                    <td data-label="Emissao">{{ compra.data_emissao.strftime('%d/%m/%Y') if compra.data_emissao else '-' }}</td>
+                    <td data-label="Fornecedor">{{ compra.fornecedor or '-' }}</td>
+                    <td data-label="Nota">{{ compra.numero_nota }}{% if compra.serie %} / {{ compra.serie }}{% endif %}</td>
+                    <td data-label="Condicao">{{ compra.condicao_pagamento or '-' }}</td>
+                    <td data-label="Parcelas">{{ compra.parcelas or 1 }}</td>
+                    <td data-label="Total">R$ {{ '%.2f'|format((compra.valor_total or 0)|float) }}</td>
+                    <td data-label="Status">
+                        {% if compra.status in ['FINALIZADA', 'ATIVA'] %}
+                        <span class="badge bg-success">Finalizada</span>
+                        {% elif compra.status == 'ABERTA' %}
+                        <span class="badge bg-warning text-dark">Aberta</span>
+                        {% elif compra.status == 'ESTORNADA' %}
+                        <span class="badge bg-danger">Estornada</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ compra.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Acoes" class="d-flex flex-wrap gap-2">
+                        {% if permite_editar_compra and compra.status != 'ESTORNADA' %}
+                        <a href="{{ url_for('entradas_notas_editar', compra_id=compra.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+                        {% endif %}
+                        {% if permite_excluir_compra and compra.status != 'ESTORNADA' %}
+                        <form method="POST" action="{{ url_for('entradas_notas_excluir', compra_id=compra.id) }}" onsubmit="return confirm('Confirma a exclusao desta nota? Esta acao remove estoque e financeiro vinculados quando permitido.');">
+                            <button class="btn btn-sm btn-outline-secondary">Excluir</button>
+                        </form>
+                        {% endif %}
+                        {% if permite_estornar_compra and compra.status in ['FINALIZADA', 'ATIVA'] %}
+                        <form method="POST" action="{{ url_for('entradas_notas_estornar', compra_id=compra.id) }}" onsubmit="return confirm('Confirma o estorno desta nota? O estoque e o financeiro serao revertidos.');">
+                            <button class="btn btn-sm btn-outline-danger">Estornar</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9" class="text-center text-muted py-4 empty-row">Nenhuma entrada de nota cadastrada.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

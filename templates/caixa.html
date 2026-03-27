@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Caixa{% endblock %}
+{% block topbar_title %}Caixa{% endblock %}
+{% block content %}
+<div class="d-grid gap-3">
+    <div>
+        <h3 class="mb-1">Caixa</h3>
+        <p class="text-muted mb-0">Base da frente de loja preparada para abertura, fechamento, suprimento, sangria e recebimentos vinculados as vendas.</p>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white">
+                    <strong>Situacao do modulo</strong>
+                </div>
+                <div class="card-body">
+                    {% if (empresa.modo_operacao or 'PDV') == 'FRENTE_LOJA' %}
+                    <div class="alert alert-primary mb-3">A empresa esta em modo <strong>Frente de loja</strong>. O caixa sera usado como fluxo principal de recebimento nas proximas fases.</div>
+                    {% else %}
+                    <div class="alert alert-secondary mb-3">A empresa esta em modo <strong>PDV</strong>. Neste modo, a venda recebe direto na tela de vendas e o caixa pode permanecer oculto.</div>
+                    {% endif %}
+                    <p class="mb-2">Esta tela ja esta liberada no menu e pronta para receber a operacao do caixa sem quebrar o restante do sistema.</p>
+                    <p class="text-muted mb-0">Na proxima fase entram abertura de caixa, troco inicial, movimentos, conferencias e fechamento.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white">
+                    <strong>Permissoes do usuario</strong>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    <div class="d-flex justify-content-between"><span>Abrir caixa</span><strong>{{ 'Sim' if pode_abrir else 'Nao' }}</strong></div>
+                    <div class="d-flex justify-content-between"><span>Fechar caixa</span><strong>{{ 'Sim' if pode_fechar else 'Nao' }}</strong></div>
+                    <div class="d-flex justify-content-between"><span>Suprimento</span><strong>{{ 'Sim' if pode_suprimento else 'Nao' }}</strong></div>
+                    <div class="d-flex justify-content-between"><span>Sangria</span><strong>{{ 'Sim' if pode_sangria else 'Nao' }}</strong></div>
+                    <div class="d-flex justify-content-between"><span>Receber venda</span><strong>{{ 'Sim' if pode_receber else 'Nao' }}</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

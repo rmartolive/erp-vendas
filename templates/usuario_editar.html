@@ -14,23 +14,43 @@
     .permission-panel {
         border: 1px solid #e9ecef;
         border-radius: 1rem;
-        padding: 1rem;
+        padding: .85rem;
         background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
         height: 100%;
     }
-    .permission-grid { display: grid; gap: .75rem; }
+    .permission-panel h6 {
+        margin-bottom: .65rem;
+        font-size: .95rem;
+    }
+    .permission-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .55rem;
+    }
     .permission-item {
         border: 1px solid #edf0f2;
         border-radius: .85rem;
-        padding: .85rem .9rem;
+        padding: .6rem .7rem;
         background: #fff;
     }
     .permission-item .form-check { margin: 0; }
-    .permission-item small { display: block; color: #6c757d; margin-top: .25rem; }
+    .permission-item .form-check-label {
+        font-size: .92rem;
+        line-height: 1.2;
+        font-weight: 600;
+    }
+    .permission-item small {
+        display: block;
+        color: #6c757d;
+        margin-top: .2rem;
+        font-size: .78rem;
+        line-height: 1.25;
+    }
     @media (max-width: 991px) {
         .user-edit-header { flex-direction: column; align-items: stretch; }
         .user-edit-grid { grid-template-columns: repeat(1, minmax(0, 1fr)); }
         .span-3, .span-4, .span-6, .span-12 { grid-column: auto; }
+        .permission-grid { grid-template-columns: 1fr; }
     }
 </style>
 
@@ -38,7 +58,7 @@
     <div class="user-edit-header">
         <div>
             <h3 class="mb-1">Editar usuario</h3>
-            <p class="user-edit-subtitle">Revise os dados de acesso e as permissoes operacionais deste usuario.</p>
+            <p class="user-edit-subtitle">Revise os dados de acesso, telas visiveis e permissoes operacionais deste usuario.</p>
         </div>
         <a href="{{ url_for('usuarios') }}" class="btn btn-outline-secondary">Voltar para usuarios</a>
     </div>
@@ -122,7 +142,7 @@
 
                 <div class="span-6">
                     <div class="permission-panel">
-                        <h6 class="mb-3">Acesso e operacao</h6>
+                        <h6 class="mb-3">Compras, caixa e financeiro</h6>
                         <div class="permission-grid">
                             <div class="permission-item">
                                 <div class="form-check form-switch">
@@ -138,6 +158,111 @@
                                 </div>
                                 <small>Libera ajustes manuais de estoque para contagem, conferencia e inventario.</small>
                             </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_editar_compra" class="form-check-input" {% if usuario.permite_editar_compra %}checked{% endif %}>
+                                    <label class="form-check-label">Editar nota de entrada</label>
+                                </div>
+                                <small>Permite editar a nota somente quando nao houver movimentacao posterior dos produtos envolvidos.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_excluir_compra" class="form-check-input" {% if usuario.permite_excluir_compra %}checked{% endif %}>
+                                    <label class="form-check-label">Excluir nota de entrada</label>
+                                </div>
+                                <small>Permite excluir a nota somente quando nao houver movimentacao posterior dos produtos envolvidos.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_estornar_compra" class="form-check-input" {% if usuario.permite_estornar_compra %}checked{% endif %}>
+                                    <label class="form-check-label">Estornar nota de entrada</label>
+                                </div>
+                                <small>Permite estornar notas finalizadas e reverter estoque e financeiro.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_editar_financeiro" class="form-check-input" {% if usuario.permite_editar_financeiro %}checked{% endif %}>
+                                    <label class="form-check-label">Editar financeiro</label>
+                                </div>
+                                <small>Autoriza editar as faturas geradas na entrada de nota.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_baixar_contas_pagar" class="form-check-input" {% if usuario.permite_baixar_contas_pagar %}checked{% endif %}>
+                                    <label class="form-check-label">Baixar contas a pagar</label>
+                                </div>
+                                <small>Libera a baixa de titulos no financeiro com log de auditoria.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_abrir_caixa" class="form-check-input" {% if usuario.permite_abrir_caixa %}checked{% endif %}>
+                                    <label class="form-check-label">Abrir caixa</label>
+                                </div>
+                                <small>Libera iniciar turno de caixa com troco inicial e operador responsavel.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_fechar_caixa" class="form-check-input" {% if usuario.permite_fechar_caixa %}checked{% endif %}>
+                                    <label class="form-check-label">Fechar caixa</label>
+                                </div>
+                                <small>Permite conferir, encerrar e registrar o fechamento do caixa.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_suprimento_caixa" class="form-check-input" {% if usuario.permite_suprimento_caixa %}checked{% endif %}>
+                                    <label class="form-check-label">Suprimento de caixa</label>
+                                </div>
+                                <small>Autoriza entradas avulsas de numerario para reforcar o caixa.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_sangria_caixa" class="form-check-input" {% if usuario.permite_sangria_caixa %}checked{% endif %}>
+                                    <label class="form-check-label">Sangria de caixa</label>
+                                </div>
+                                <small>Permite retirar valores do caixa com registro da operacao.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_receber_venda_caixa" class="form-check-input" {% if usuario.permite_receber_venda_caixa %}checked{% endif %}>
+                                    <label class="form-check-label">Receber venda no caixa</label>
+                                </div>
+                                <small>Libera o recebimento de vendas no fluxo de frente de loja.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_baixar_contas_receber" class="form-check-input" {% if usuario.permite_baixar_contas_receber %}checked{% endif %}>
+                                    <label class="form-check-label">Baixar contas a receber</label>
+                                </div>
+                                <small>Permite quitar parcelas e titulos de recebimento manualmente.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_ver_balancete" class="form-check-input" {% if usuario.permite_ver_balancete %}checked{% endif %}>
+                                    <label class="form-check-label">Ver balancete</label>
+                                </div>
+                                <small>Libera o acesso ao consolidado financeiro do sistema.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="span-12">
+                    <div class="permission-panel">
+                        <h6 class="mb-3">Telas visiveis para o usuario</h6>
+                        <div class="row g-2">
+                            {% for group in screen_groups %}
+                            <div class="col-md-4">
+                                <div class="permission-item h-100">
+                                    <strong class="d-block mb-2 small">{{ group.title }}</strong>
+                                    {% for item in group["items"] %}
+                                    <div class="form-check form-switch mb-1">
+                                        <input type="checkbox" name="screen_{{ item.key }}" class="form-check-input" {% if item.key in usuario.telas_permitidas_lista %}checked{% endif %}>
+                                        <label class="form-check-label">{{ item.label }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>

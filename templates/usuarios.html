@@ -4,7 +4,6 @@
 {% block content %}
 <style>
     .users-shell { display: grid; gap: 1rem; }
-    .users-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
     .users-subtitle { color: #6c757d; margin: 0; }
     .users-form-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1rem; }
     .span-3 { grid-column: span 3; }
@@ -14,20 +13,38 @@
     .permission-panel {
         border: 1px solid #e9ecef;
         border-radius: 1rem;
-        padding: 1rem;
+        padding: .85rem;
         background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
         height: 100%;
     }
-    .permission-panel h6 { margin-bottom: .75rem; }
-    .permission-grid { display: grid; gap: .75rem; }
+    .permission-panel h6 {
+        margin-bottom: .65rem;
+        font-size: .95rem;
+    }
+    .permission-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .55rem;
+    }
     .permission-item {
         border: 1px solid #edf0f2;
         border-radius: .85rem;
-        padding: .85rem .9rem;
+        padding: .6rem .7rem;
         background: #fff;
     }
     .permission-item .form-check { margin: 0; }
-    .permission-item small { display: block; color: #6c757d; margin-top: .25rem; }
+    .permission-item .form-check-label {
+        font-size: .92rem;
+        line-height: 1.2;
+        font-weight: 600;
+    }
+    .permission-item small {
+        display: block;
+        color: #6c757d;
+        margin-top: .2rem;
+        font-size: .78rem;
+        line-height: 1.25;
+    }
     .badge-cloud { display: flex; flex-wrap: wrap; gap: .35rem; }
     .table-card { border: 1px solid #e9ecef; border-radius: 1rem; overflow: hidden; }
     .table-card .table { margin: 0; }
@@ -39,17 +56,119 @@
         color: #6c757d;
     }
     @media (max-width: 991px) {
-        .users-header { flex-direction: column; align-items: stretch; }
         .users-form-grid { grid-template-columns: repeat(1, minmax(0, 1fr)); }
         .span-3, .span-4, .span-6, .span-12 { grid-column: auto; }
+        .mobile-actions { flex-direction: column; }
+        .mobile-actions .btn { width: 100%; }
+        .permission-grid { grid-template-columns: 1fr; }
     }
 </style>
 
 <div class="users-shell">
-    <div class="users-header">
-        <div>
-            <h3 class="mb-1">Usuarios</h3>
-            <p class="users-subtitle">Gerencie acessos, limites de desconto e permissoes operacionais da equipe.</p>
+    <div>
+        <h3 class="mb-1">Usuarios</h3>
+        <p class="users-subtitle">Gerencie acessos, telas visiveis e permissoes operacionais da equipe.</p>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Busca</strong>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-10">
+                    <label class="form-label">Nome ou usuario</label>
+                    <input type="text" name="q" class="form-control" value="{{ q or '' }}" placeholder="Digite para localizar">
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-2 mobile-actions">
+                    <button class="btn btn-dark w-100">Buscar</button>
+                    <a href="{{ url_for('usuarios') }}" class="btn btn-outline-secondary w-100">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Usuarios cadastrados</strong>
+        </div>
+        <div class="card-body">
+            {% if usuarios %}
+            <div class="table-responsive table-card">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Usuario</th>
+                            <th>Perfil</th>
+                            <th>Desconto max.</th>
+                            <th>Permissoes</th>
+                            <th>Status</th>
+                            <th>Acoes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr>
+                            <td>{{ u.id }}</td>
+                            <td>{{ u.nome }}</td>
+                            <td>{{ u.username }}</td>
+                            <td>
+                                {% if u.perfil == 'admin' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Administrador</span>
+                                {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Atendente</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ "%.2f"|format(u.desconto_maximo_percentual or 0) }}%</td>
+                            <td>
+                                <div class="badge-cloud">
+                                    {% if u.pode_vender_abaixo_custo %}<span class="badge bg-warning text-dark">Abaixo do custo</span>{% endif %}
+                                    {% if u.permite_login_multiplo %}<span class="badge bg-info text-dark">Multi login</span>{% endif %}
+                                    {% if u.permite_editar_venda %}<span class="badge bg-dark">Editar venda</span>{% endif %}
+                                    {% if u.permite_estornar_venda %}<span class="badge bg-primary">Estorno venda</span>{% endif %}
+                                    {% if u.permite_excluir_venda %}<span class="badge bg-danger">Excluir venda</span>{% endif %}
+                                    {% if u.permite_inventario %}<span class="badge bg-success">Inventario</span>{% endif %}
+                                    {% if u.permite_editar_compra %}<span class="badge bg-primary">Editar nota</span>{% endif %}
+                                    {% if u.permite_excluir_compra %}<span class="badge bg-secondary">Excluir nota</span>{% endif %}
+                                    {% if u.permite_estornar_compra %}<span class="badge bg-warning text-dark">Estorno compra</span>{% endif %}
+                                    {% if u.permite_editar_financeiro %}<span class="badge bg-secondary">Editar financeiro</span>{% endif %}
+                                    {% if u.permite_baixar_contas_pagar %}<span class="badge bg-success">Baixar contas pagar</span>{% endif %}
+                                    {% if u.permite_abrir_caixa %}<span class="badge bg-primary">Abrir caixa</span>{% endif %}
+                                    {% if u.permite_fechar_caixa %}<span class="badge bg-dark">Fechar caixa</span>{% endif %}
+                                    {% if u.permite_suprimento_caixa %}<span class="badge bg-info text-dark">Suprimento</span>{% endif %}
+                                    {% if u.permite_sangria_caixa %}<span class="badge bg-warning text-dark">Sangria</span>{% endif %}
+                                    {% if u.permite_receber_venda_caixa %}<span class="badge bg-success">Receber no caixa</span>{% endif %}
+                                    {% if u.permite_baixar_contas_receber %}<span class="badge bg-success-subtle text-success border border-success-subtle">Baixar contas receber</span>{% endif %}
+                                    {% if u.permite_ver_balancete %}<span class="badge bg-secondary">Balancete</span>{% endif %}
+                                    {% for group in screen_groups %}
+                                        {% for item in group["items"] %}
+                                            {% if item.key in u.telas_permitidas_lista %}
+                                    <span class="badge bg-light text-dark border">{{ item.label }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if u.ativo %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inativo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('usuarios_editar', usuario_id=u.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">Nenhum usuario cadastrado.</div>
+            {% endif %}
         </div>
     </div>
 
@@ -131,7 +250,7 @@
 
                 <div class="span-6">
                     <div class="permission-panel">
-                        <h6 class="mb-3">Acesso e operacao</h6>
+                        <h6 class="mb-3">Compras, caixa e financeiro</h6>
                         <div class="permission-grid">
                             <div class="permission-item">
                                 <div class="form-check form-switch">
@@ -147,75 +266,115 @@
                                 </div>
                                 <small>Autoriza ajustes manuais de estoque em processos de inventario e conferencia.</small>
                             </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_editar_compra" class="form-check-input">
+                                    <label class="form-check-label">Editar nota de entrada</label>
+                                </div>
+                                <small>Permite editar a nota somente quando nao houver movimentacao posterior dos produtos envolvidos.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_excluir_compra" class="form-check-input">
+                                    <label class="form-check-label">Excluir nota de entrada</label>
+                                </div>
+                                <small>Permite excluir a nota somente quando nao houver movimentacao posterior dos produtos envolvidos.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_estornar_compra" class="form-check-input">
+                                    <label class="form-check-label">Estornar nota de entrada</label>
+                                </div>
+                                <small>Permite estornar notas finalizadas e reverter estoque e financeiro.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_editar_financeiro" class="form-check-input">
+                                    <label class="form-check-label">Editar financeiro</label>
+                                </div>
+                                <small>Autoriza editar as faturas geradas na tela de entrada de nota.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_baixar_contas_pagar" class="form-check-input">
+                                    <label class="form-check-label">Baixar contas a pagar</label>
+                                </div>
+                                <small>Libera baixar titulos no financeiro com registro de log.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_abrir_caixa" class="form-check-input">
+                                    <label class="form-check-label">Abrir caixa</label>
+                                </div>
+                                <small>Autoriza iniciar turno de caixa com troco inicial e operador responsavel.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_fechar_caixa" class="form-check-input">
+                                    <label class="form-check-label">Fechar caixa</label>
+                                </div>
+                                <small>Libera conferência final, fechamento e encerramento do caixa.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_suprimento_caixa" class="form-check-input">
+                                    <label class="form-check-label">Suprimento de caixa</label>
+                                </div>
+                                <small>Permite lançar entrada manual de numerario para reforço do caixa.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_sangria_caixa" class="form-check-input">
+                                    <label class="form-check-label">Sangria de caixa</label>
+                                </div>
+                                <small>Permite retirar valores do caixa com registro do motivo.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_receber_venda_caixa" class="form-check-input">
+                                    <label class="form-check-label">Receber venda no caixa</label>
+                                </div>
+                                <small>Libera recebimentos de vendas no fluxo de frente de loja.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_baixar_contas_receber" class="form-check-input">
+                                    <label class="form-check-label">Baixar contas a receber</label>
+                                </div>
+                                <small>Permite baixar parcelas e titulos de recebimento manualmente.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_ver_balancete" class="form-check-input">
+                                    <label class="form-check-label">Ver balancete</label>
+                                </div>
+                                <small>Libera acesso ao resumo financeiro consolidado do sistema.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="span-12">
+                    <div class="permission-panel">
+                        <h6 class="mb-3">Telas visiveis para o usuario</h6>
+                        <div class="row g-2">
+                            {% for group in screen_groups %}
+                            <div class="col-md-4">
+                                <div class="permission-item h-100">
+                                    <strong class="d-block mb-2 small">{{ group.title }}</strong>
+                                    {% for item in group["items"] %}
+                                    <div class="form-check form-switch mb-1">
+                                        <input type="checkbox" name="screen_{{ item.key }}" class="form-check-input" checked>
+                                        <label class="form-check-label">{{ item.label }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white">
-            <strong>Lista de usuarios</strong>
-        </div>
-        <div class="card-body">
-            {% if usuarios %}
-            <div class="table-responsive table-card">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Usuario</th>
-                            <th>Perfil</th>
-                            <th>Desconto max.</th>
-                            <th>Permissoes</th>
-                            <th>Status</th>
-                            <th>Acoes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for u in usuarios %}
-                        <tr>
-                            <td>{{ u.id }}</td>
-                            <td>{{ u.nome }}</td>
-                            <td>{{ u.username }}</td>
-                            <td>
-                                {% if u.perfil == 'admin' %}
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Administrador</span>
-                                {% else %}
-                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Atendente</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ "%.2f"|format(u.desconto_maximo_percentual or 0) }}%</td>
-                            <td>
-                                <div class="badge-cloud">
-                                    {% if u.pode_vender_abaixo_custo %}<span class="badge bg-warning text-dark">Abaixo do custo</span>{% endif %}
-                                    {% if u.permite_login_multiplo %}<span class="badge bg-info text-dark">Multi login</span>{% endif %}
-                                    {% if u.permite_editar_venda %}<span class="badge bg-dark">Editar venda</span>{% endif %}
-                                    {% if u.permite_estornar_venda %}<span class="badge bg-primary">Estorno</span>{% endif %}
-                                    {% if u.permite_excluir_venda %}<span class="badge bg-danger">Excluir venda</span>{% endif %}
-                                    {% if u.permite_inventario %}<span class="badge bg-success">Inventario</span>{% endif %}
-                                </div>
-                            </td>
-                            <td>
-                                {% if u.ativo %}
-                                <span class="badge bg-success-subtle text-success border border-success-subtle">Ativo</span>
-                                {% else %}
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inativo</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{{ url_for('usuarios_editar', usuario_id=u.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="alert alert-info mb-0">Nenhum usuario cadastrado.</div>
-            {% endif %}
         </div>
     </div>
 </div>

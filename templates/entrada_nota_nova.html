@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+{% block title %}Entrada de nota{% endblock %}
+{% block topbar_title %}Entrada de nota{% endblock %}
+{% block content %}
+<style>
+    .table-card { border: 1px solid #e9ecef; border-radius: 16px; overflow: hidden; background: #fff; }
+    .table-card .table { margin-bottom: 0; }
+    .table-card thead th { font-size: .8rem; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; background: #f8f9fa; }
+    .summary-card { border: 1px solid #e9ecef; border-radius: 18px; box-shadow: 0 0.5rem 1rem rgba(15, 23, 42, .06); }
+    .summary-stack { display: grid; gap: 12px; }
+    .summary-line { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px dashed #e9ecef; }
+    .summary-line:last-child { border-bottom: 0; }
+    .summary-total { font-size: 1.2rem; font-weight: 700; }
+    .section-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .table-footer-note { font-size: .88rem; color: #6c757d; }
+    .remove-btn { white-space: nowrap; min-width: 38px; height: 38px; font-size: .85rem; line-height: 1; }
+    .summary-diff.ok { color: #0d6efd; }
+    .summary-diff.positive { color: #198754; }
+    .summary-diff.negative { color: #dc3545; }
+    @media (max-width: 991px) {
+        .section-title { flex-direction: column; align-items: stretch; }
+        .mobile-card-table table, .mobile-card-table thead, .mobile-card-table tbody, .mobile-card-table tr, .mobile-card-table th, .mobile-card-table td { display: block; width: 100%; }
+        .mobile-card-table thead { display: none; }
+        .mobile-card-table tr { border: 1px solid #e9ecef; border-radius: 14px; padding: .75rem; margin-bottom: .75rem; background: #fff; }
+        .mobile-card-table td[data-label]::before { content: attr(data-label); display: block; font-size: .72rem; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .3rem; }
+        .mobile-card-table td { padding: 0; border: 0; margin-bottom: .7rem; }
+        .mobile-card-table td:last-child { margin-bottom: 0; }
+        .mobile-card-table .remove-btn { width: 100%; }
+    }
+</style>
+
+{% set compra_atual = compra if compra else {} %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="text-muted small">Selecione a condição de pagamento, gere as faturas e ajuste os lançamentos antes de salvar ou finalizar.</div>
+    <a href="{{ url_for('entradas_notas') }}" class="btn btn-outline-secondary">Ver entradas</a>
+</div>
+
+<form method="post" id="form-compra">
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white"><strong>Dados da nota</strong></div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <label class="form-label">Fornecedor</label>
+                    <select class="form-select" name="fornecedor_id" required>
+                        <option value="">Selecione</option>
+                        {% for fornecedor in fornecedores %}
+                        <option value="{{ fornecedor.id }}" {% if compra_atual and compra_atual.fornecedor_id == fornecedor.id %}selected{% endif %}>{{ fornecedor.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-2">
+                    <label class="form-label">Nº da nota</label>
+                    <input type="text" class="form-control" name="numero_nota" value="{{ compra_atual.numero_nota or '' }}" required>
+                </div>
+                <div class="col-lg-2">
+                    <label class="form-label">Série</label>
+                    <input type="text" class="form-control" name="serie" value="{{ compra_atual.serie or '' }}">
+                </div>
+                <div class="col-lg-2">
+                    <label class="form-label">Emissão</label>
+                    <input type="date" class="form-control" name="data_emissao" value="{{ compra_atual.data_emissao.isoformat() if compra_atual and compra_atual.data_emissao else '' }}">
+                </div>
+                <div class="col-lg-2">
+                    <label class="form-label">Condição</label>
+                    <select class="form-select" name="condicao_pagamento_id" id="condicao_pagamento_id" required>
+                        <option value="">Selecione</option>
+                        {% for condicao in condicoes %}
+                        <option value="{{ condicao.id }}"
+                                data-parcelas="{{ condicao.parcelas or 1 }}"
+                                data-intervalo="{{ condicao.dias_intervalo or 30 }}"
+                                data-nome="{{ condicao.nome }}"
+                                {% if compra_atual and compra_atual.condicao_pagamento_id == condicao.id %}selected{% endif %}>
+                            {{ condicao.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-12">
+                    <label class="form-label">Observações</label>
+                    <input type="text" class="form-control" name="observacoes" value="{{ compra_atual.observacoes or '' }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white"><strong>Itens da nota</strong></div>
+        <div class="card-body">
+            <div class="section-title">
+                <div class="table-footer-note">Notas finalizadas atualizam estoque e custo. Notas em aberto ficam como rascunho para revisão.</div>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="add-item">Adicionar item</button>
+            </div>
+            <div class="table-card table-responsive mobile-card-table">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Und</th>
+                            <th>Estoque atual</th>
+                            <th>Qtd</th>
+                            <th>Vlr unit.</th>
+                            <th>Total item</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itens-container">
+                        <tr class="item-compra">
+                            <td data-label="Produto">
+                                <select class="form-select produto-select" name="produto_id[]" required>
+                                    <option value="">Selecione</option>
+                                    {% for produto in produtos %}
+                                    <option value="{{ produto.id }}" data-unidade="{{ produto.unidade }}" data-estoque="{{ produto.estoque_atual }}" data-custo="{{ produto.custo }}">
+                                        {{ produto.descricao }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td data-label="Und"><input type="text" class="form-control unidade-view" value="-" readonly></td>
+                            <td data-label="Estoque atual"><input type="text" class="form-control estoque-view" value="0" readonly></td>
+                            <td data-label="Qtd"><input type="text" class="form-control quantidade-input" name="quantidade[]" inputmode="decimal" placeholder="0" required></td>
+                            <td data-label="Vlr unit."><input type="text" class="form-control valor-input" name="valor_unitario[]" inputmode="decimal" placeholder="0,00" required></td>
+                            <td data-label="Total item"><input type="text" class="form-control total-item" value="0,00" readonly></td>
+                            <td data-label="Ação"><button type="button" class="btn btn-outline-danger remove-item remove-btn">×</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="summary-card card shadow-sm mb-3">
+        <div class="card-header bg-white"><strong>Resumo financeiro</strong></div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <label class="form-label">Desconto</label>
+                    <input type="text" class="form-control" name="desconto" id="desconto" inputmode="decimal" value="{{ '%.2f'|format((compra_atual.desconto or 0)|float) if compra_atual else '0,00' }}">
+                </div>
+                <div class="col-lg-4">
+                    <label class="form-label">Acréscimo</label>
+                    <input type="text" class="form-control" name="acrescimo" id="acrescimo" inputmode="decimal" value="{{ '%.2f'|format((compra_atual.acrescimo or 0)|float) if compra_atual else '0,00' }}">
+                </div>
+                <div class="col-lg-4 d-flex align-items-end">
+                    <div class="w-100 summary-line summary-total py-2 border-0">
+                        <span>Total da nota</span>
+                        <strong id="total_nota">0,00</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="summary-stack mt-3">
+                <div class="summary-line"><span>Total dos produtos</span><strong id="valor_produtos">0,00</strong></div>
+                <div class="summary-line"><span>Desconto</span><strong id="valor_desconto">0,00</strong></div>
+                <div class="summary-line"><span>Acréscimo</span><strong id="valor_acrescimo">0,00</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white"><strong>Faturas da compra</strong></div>
+        <div class="card-body">
+            <div class="section-title">
+                <div class="table-footer-note">Ao escolher a condição, as parcelas são geradas automaticamente e podem ser editadas antes do salvamento.</div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="gerar-faturas">Gerar faturas</button>
+                    {% if permite_editar_financeiro %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="add-fatura">Adicionar fatura</button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="table-card table-responsive mobile-card-table">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Parcela</th>
+                            <th>Descrição</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="faturas-container">
+                        <tr class="fatura-row">
+                            <td data-label="Parcela"><input type="number" class="form-control fatura-numero" name="fatura_numero[]" min="1" value="1"></td>
+                            <td data-label="Descrição"><input type="text" class="form-control fatura-descricao" name="fatura_descricao[]" placeholder="Descrição da fatura"></td>
+                            <td data-label="Vencimento"><input type="date" class="form-control fatura-vencimento" name="fatura_vencimento[]"></td>
+                            <td data-label="Valor"><input type="text" class="form-control fatura-valor" name="fatura_valor[]" inputmode="decimal" placeholder="0,00"></td>
+                            <td data-label="Ação"><button type="button" class="btn btn-outline-danger remove-fatura remove-btn">×</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="summary-stack mt-3">
+                <div class="summary-line"><span>Total faturado</span><strong id="faturas_total">0,00</strong></div>
+                <div class="summary-line"><span>Diferença</span><strong id="faturas_diff" class="summary-diff negative">0,00</strong></div>
+            </div>
+            <div class="d-grid gap-2 mt-3">
+                <button type="submit" class="btn btn-outline-secondary" name="acao" value="ABERTA">Salvar em aberto</button>
+                <button type="submit" class="btn btn-primary" name="acao" value="FINALIZADA">Finalizar nota</button>
+                <a href="{{ url_for('entradas_notas') }}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const itensContainer = document.getElementById("itens-container");
+    const faturasContainer = document.getElementById("faturas-container");
+    const addItemBtn = document.getElementById("add-item");
+    const addFaturaBtn = document.getElementById("add-fatura");
+    const gerarFaturasBtn = document.getElementById("gerar-faturas");
+    const descontoInput = document.getElementById("desconto");
+    const acrescimoInput = document.getElementById("acrescimo");
+    const condicaoSelect = document.getElementById("condicao_pagamento_id");
+    const form = document.getElementById("form-compra");
+    const dataEmissaoInput = document.querySelector('input[name="data_emissao"]');
+    const itensIniciais = {{ (itens_iniciais or [])|tojson }};
+    const faturasIniciais = {{ (faturas_iniciais or [])|tojson }};
+
+    if (dataEmissaoInput && !dataEmissaoInput.value) dataEmissaoInput.value = new Date().toISOString().slice(0, 10);
+
+    function numero(v) {
+        return Number(String(v || "0").replace(/\./g, "").replace(",", ".")) || 0;
+    }
+
+    function moeda(n) {
+        return Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function splitAmount(total, parcelas) {
+        parcelas = Math.max(parseInt(parcelas || 1, 10), 1);
+        const totalCentavos = Math.round((Number(total || 0) + Number.EPSILON) * 100);
+        const base = Math.floor(totalCentavos / parcelas);
+        let restante = totalCentavos - (base * parcelas);
+        const valores = [];
+        for (let i = 0; i < parcelas; i += 1) {
+            const extra = restante > 0 ? 1 : 0;
+            if (restante > 0) restante -= 1;
+            valores.push((base + extra) / 100);
+        }
+        return valores;
+    }
+
+    function totalNotaAtual() {
+        return numero(document.getElementById("total_nota").textContent);
+    }
+
+    function atualizarResumoFaturas() {
+        let total = 0;
+        document.querySelectorAll(".fatura-valor").forEach(input => total += numero(input.value));
+        const diff = total - totalNotaAtual();
+        document.getElementById("faturas_total").textContent = moeda(total);
+        const diffEl = document.getElementById("faturas_diff");
+        diffEl.textContent = moeda(Math.abs(diff));
+        diffEl.classList.remove("ok", "positive", "negative");
+        if (Math.abs(diff) <= 0.009) diffEl.classList.add("ok");
+        else if (diff > 0) diffEl.classList.add("positive");
+        else diffEl.classList.add("negative");
+    }
+
+    function atualizarTotais() {
+        let totalProdutos = 0;
+        document.querySelectorAll(".item-compra").forEach(function (row) {
+            const qtd = numero(row.querySelector(".quantidade-input")?.value);
+            const valor = numero(row.querySelector(".valor-input")?.value);
+            const total = qtd * valor;
+            totalProdutos += total;
+            row.querySelector(".total-item").value = moeda(total);
+        });
+
+        const desconto = numero(descontoInput.value);
+        const acrescimo = numero(acrescimoInput.value);
+        const totalNota = Math.max(totalProdutos - desconto + acrescimo, 0);
+        document.getElementById("valor_produtos").textContent = moeda(totalProdutos);
+        document.getElementById("valor_desconto").textContent = moeda(desconto);
+        document.getElementById("valor_acrescimo").textContent = moeda(acrescimo);
+        document.getElementById("total_nota").textContent = moeda(totalNota);
+        atualizarResumoFaturas();
+    }
+
+    function atualizarProduto(row) {
+        const select = row.querySelector(".produto-select");
+        const option = select.selectedOptions[0];
+        row.querySelector(".unidade-view").value = option?.dataset.unidade || "-";
+        row.querySelector(".estoque-view").value = option?.dataset.estoque || "0";
+        const valorInput = row.querySelector(".valor-input");
+        if (valorInput && !valorInput.value) valorInput.value = moeda(option?.dataset.custo || 0);
+        atualizarTotais();
+    }
+
+    function bindItemRow(row) {
+        row.querySelector(".produto-select").addEventListener("change", function () { atualizarProduto(row); });
+        row.querySelectorAll(".quantidade-input, .valor-input").forEach(function (input) { input.addEventListener("input", atualizarTotais); });
+        row.querySelector(".remove-item").addEventListener("click", function () {
+            const rows = document.querySelectorAll(".item-compra");
+            if (rows.length > 1) row.remove();
+            else {
+                row.querySelectorAll("input").forEach(i => i.value = "");
+                row.querySelector(".unidade-view").value = "-";
+                row.querySelector(".estoque-view").value = "0";
+                row.querySelector(".total-item").value = "0,00";
+                row.querySelector(".produto-select").value = "";
+            }
+            atualizarTotais();
+        });
+    }
+
+    function bindFaturaRow(row) {
+        row.querySelectorAll(".fatura-valor, .fatura-vencimento, .fatura-descricao, .fatura-numero").forEach(function (input) {
+            input.addEventListener("input", atualizarResumoFaturas);
+            input.addEventListener("change", atualizarResumoFaturas);
+        });
+        row.querySelector(".remove-fatura").addEventListener("click", function () {
+            const rows = document.querySelectorAll(".fatura-row");
+            if (rows.length > 1) row.remove();
+            else row.querySelectorAll("input").forEach(i => i.value = "");
+            atualizarResumoFaturas();
+        });
+    }
+
+    function addFatura(data = {}) {
+        const clone = document.querySelector(".fatura-row").cloneNode(true);
+        clone.querySelector(".fatura-numero").value = data.numero_parcela || document.querySelectorAll(".fatura-row").length + 1;
+        clone.querySelector(".fatura-descricao").value = data.descricao || "";
+        clone.querySelector(".fatura-vencimento").value = data.data_vencimento ? String(data.data_vencimento).slice(0, 10) : "";
+        clone.querySelector(".fatura-valor").value = data.valor != null ? moeda(data.valor) : "";
+        faturasContainer.appendChild(clone);
+        bindFaturaRow(clone);
+        atualizarResumoFaturas();
+    }
+
+    function limparFaturas() {
+        document.querySelectorAll(".fatura-row").forEach((row, idx) => { if (idx > 0) row.remove(); });
+        const first = document.querySelector(".fatura-row");
+        first.querySelectorAll("input").forEach(i => i.value = "");
+        first.querySelector(".fatura-numero").value = "1";
+    }
+
+    function gerarFaturas() {
+        const option = condicaoSelect.selectedOptions[0];
+        if (!option || !option.value) return;
+        const parcelas = Number(option.dataset.parcelas || 1);
+        const intervalo = Number(option.dataset.intervalo || 30);
+        const nome = option.dataset.nome || "";
+        const total = totalNotaAtual();
+        const dataBase = dataEmissaoInput.value || new Date().toISOString().slice(0, 10);
+        const valores = splitAmount(total, parcelas);
+        limparFaturas();
+        valores.forEach(function (valor, idx) {
+            if (idx === 0) {
+                const row = document.querySelector(".fatura-row");
+                row.querySelector(".fatura-numero").value = idx + 1;
+                row.querySelector(".fatura-descricao").value = `Nota - ${nome} ${idx + 1}/${parcelas}`;
+                const data = new Date(`${dataBase}T00:00:00`);
+                data.setDate(data.getDate() + (idx * intervalo));
+                row.querySelector(".fatura-vencimento").value = data.toISOString().slice(0, 10);
+                row.querySelector(".fatura-valor").value = moeda(valor);
+            } else {
+                const data = new Date(`${dataBase}T00:00:00`);
+                data.setDate(data.getDate() + (idx * intervalo));
+                addFatura({
+                    numero_parcela: idx + 1,
+                    descricao: `Nota - ${nome} ${idx + 1}/${parcelas}`,
+                    data_vencimento: data.toISOString().slice(0, 10),
+                    valor: valor
+                });
+            }
+        });
+        atualizarResumoFaturas();
+    }
+
+    addItemBtn.addEventListener("click", function () {
+        const clone = document.querySelector(".item-compra").cloneNode(true);
+        clone.querySelectorAll("input").forEach(i => i.value = i.classList.contains("unidade-view") ? "-" : i.classList.contains("estoque-view") ? "0" : i.classList.contains("total-item") ? "0,00" : "");
+        clone.querySelector(".produto-select").value = "";
+        itensContainer.appendChild(clone);
+        bindItemRow(clone);
+        atualizarTotais();
+    });
+
+    if (addFaturaBtn) addFaturaBtn.addEventListener("click", function () { addFatura(); });
+    gerarFaturasBtn.addEventListener("click", gerarFaturas);
+
+    document.querySelectorAll(".item-compra").forEach(bindItemRow);
+    document.querySelectorAll(".fatura-row").forEach(bindFaturaRow);
+    descontoInput.addEventListener("input", atualizarTotais);
+    acrescimoInput.addEventListener("input", atualizarTotais);
+
+    if (itensIniciais.length) {
+        const first = document.querySelector(".item-compra");
+        const rows = [first];
+        itensIniciais.forEach(function (item, idx) {
+            const row = idx === 0 ? first : (function () {
+                const clone = first.cloneNode(true);
+                itensContainer.appendChild(clone);
+                bindItemRow(clone);
+                rows.push(clone);
+                return clone;
+            })();
+            row.querySelector(".produto-select").value = String(item.produto_id || "");
+            atualizarProduto(row);
+            row.querySelector(".quantidade-input").value = String(item.quantidade || 0).replace(".", ",");
+            row.querySelector(".valor-input").value = moeda(item.valor_unitario || 0);
+        });
+    }
+
+    if (faturasIniciais.length) {
+        limparFaturas();
+        faturasIniciais.forEach(function (fatura, idx) {
+            if (idx === 0) {
+                const row = document.querySelector(".fatura-row");
+                row.querySelector(".fatura-numero").value = fatura.numero_parcela || 1;
+                row.querySelector(".fatura-descricao").value = fatura.descricao || "";
+                row.querySelector(".fatura-vencimento").value = String(fatura.data_vencimento || "").slice(0, 10);
+                row.querySelector(".fatura-valor").value = moeda(fatura.valor || 0);
+            } else {
+                addFatura(fatura);
+            }
+        });
+    }
+
+    form.addEventListener("submit", function (e) {
+        const totalNota = totalNotaAtual();
+        let totalFaturas = 0;
+        document.querySelectorAll(".fatura-valor").forEach(input => totalFaturas += numero(input.value));
+        if (Math.abs(totalNota - totalFaturas) > 0.009) {
+            e.preventDefault();
+            alert(`As faturas somam R$ ${moeda(totalFaturas)} e a nota totaliza R$ ${moeda(totalNota)}.`);
+        }
+    });
+
+    atualizarTotais();
+});
+</script>
+{% endblock %}

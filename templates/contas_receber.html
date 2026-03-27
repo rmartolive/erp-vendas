@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Contas a Receber{% endblock %}
+{% block topbar_title %}Contas a Receber{% endblock %}
+{% block content %}
+<div class="d-grid gap-3">
+    <div>
+        <h3 class="mb-1">Contas a receber</h3>
+        <p class="text-muted mb-0">Estrutura inicial preparada para parcelas de venda, baixas e acompanhamento financeiro dos recebimentos.</p>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Base funcional pronta</strong>
+        </div>
+        <div class="card-body">
+            <p class="mb-3">Este modulo entra para sustentar os dois cenarios do sistema: recebimento direto no PDV e recebimento controlado pelo caixa na frente de loja.</p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="small text-muted mb-1">Modo da empresa</div>
+                        <strong>{{ 'Frente de loja' if (empresa.modo_operacao or 'PDV') == 'FRENTE_LOJA' else 'PDV' }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="small text-muted mb-1">Pode baixar</div>
+                        <strong>{{ 'Sim' if pode_baixar else 'Nao' }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="small text-muted mb-1">Proxima entrega</div>
+                        <strong>Parcelas, baixas e logs</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

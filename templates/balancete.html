@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Balancete{% endblock %}
+{% block topbar_title %}Balancete{% endblock %}
+{% block content %}
+<div class="d-grid gap-3">
+    <div>
+        <h3 class="mb-1">Balancete</h3>
+        <p class="text-muted mb-0">Tela reservada para o consolidado financeiro depois da integracao entre caixa, contas a pagar e contas a receber.</p>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Escopo desta fase</strong>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-light border mb-3">
+                O acesso ao balancete ja pode ser controlado por permissao de usuario, sem misturar essa base com a implementacao operacional do financeiro.
+            </div>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <div class="small text-muted">Permissao atual</div>
+                    <strong>{{ 'Liberado' if pode_ver_balancete else 'Bloqueado' }}</strong>
+                </div>
+                <div>
+                    <div class="small text-muted">Modo de operacao</div>
+                    <strong>{{ 'Frente de loja' if (empresa.modo_operacao or 'PDV') == 'FRENTE_LOJA' else 'PDV' }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

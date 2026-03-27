@@ -16,6 +16,7 @@
                     <th>CNPJ</th>
                     <th>Cidade/UF</th>
                     <th>Responsável</th>
+                    <th>Modo</th>
                     <th>Venda sem estoque</th>
                     <th>Status</th>
                     <th style="width: 120px;">Ações</th>
@@ -33,6 +34,13 @@
                     <td>{{ empresa.cnpj or '-' }}</td>
                     <td>{{ empresa.cidade or '-' }}{% if empresa.estado %}/{{ empresa.estado }}{% endif %}</td>
                     <td>{{ empresa.responsavel or '-' }}</td>
+                    <td>
+                        {% if (empresa.modo_operacao or 'PDV') == 'FRENTE_LOJA' %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Frente de loja</span>
+                        {% else %}
+                            <span class="badge bg-dark-subtle text-dark border border-dark-subtle">PDV</span>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if empresa.permite_estoque_negativo %}
                             <span class="badge bg-warning text-dark">Sim</span>
@@ -53,7 +61,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">Nenhuma empresa cadastrada.</td>
+                    <td colspan="8" class="text-center text-muted py-4">Nenhuma empresa cadastrada.</td>
                 </tr>
                 {% endfor %}
             </tbody>

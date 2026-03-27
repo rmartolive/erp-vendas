@@ -1,166 +1,177 @@
 {% extends "base.html" %}
-
-{% block title %}Condições de Pagamento - ERP Vendas{% endblock %}
-{% block topbar_title %}Condições de Pagamento{% endblock %}
+{% block title %}Condicoes de Pagamento{% endblock %}
+{% block topbar_title %}Condicoes de Pagamento{% endblock %}
 
 {% block extra_head %}
 <style>
-    .condicoes-grid {
+    .condicoes-shell { display: grid; gap: 1rem; }
+    .condicoes-subtitle { color: #6c757d; margin: 0; }
+    .compact-form-grid {
         display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: 16px;
+        grid-template-columns: 2.2fr repeat(5, minmax(110px, 1fr));
+        gap: .85rem;
+        align-items: end;
     }
-
-    .condicoes-grid .col-12 { grid-column: span 12; }
-    .condicoes-grid .col-4 { grid-column: span 4; }
-    .condicoes-grid .col-3 { grid-column: span 3; }
-    .condicoes-grid .col-2 { grid-column: span 2; }
-    .condicoes-grid .col-1 { grid-column: span 1; }
-
-    .checkbox-wrap {
+    .table-card { border: 1px solid #e9ecef; border-radius: 1rem; overflow: hidden; }
+    .table-card .table { margin: 0; }
+    .table-card thead th {
+        background: #f8f9fa;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #6c757d;
+        white-space: nowrap;
+    }
+    .table-card td .form-control,
+    .table-card td .form-select {
+        min-width: 90px;
+    }
+    .table-card .form-check {
         display: flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 38px;
+        justify-content: center;
+        margin: 0;
     }
-
-    .muted {
-        color: #64748b;
-        font-size: 12px;
-    }
-
-    @media (max-width: 992px) {
-        .condicoes-grid .col-4,
-        .condicoes-grid .col-3,
-        .condicoes-grid .col-2,
-        .condicoes-grid .col-1 {
-            grid-column: span 12;
+    @media (max-width: 991px) {
+        .compact-form-grid {
+            grid-template-columns: 1fr;
+        }
+        .mobile-actions {
+            flex-direction: column;
+        }
+        .mobile-actions .btn {
+            width: 100%;
+        }
+        .mobile-card-table table,
+        .mobile-card-table thead,
+        .mobile-card-table tbody,
+        .mobile-card-table tr,
+        .mobile-card-table th,
+        .mobile-card-table td {
+            display: block;
+            width: 100%;
+        }
+        .mobile-card-table thead {
+            display: none;
+        }
+        .mobile-card-table tr {
+            border: 1px solid #e9ecef;
+            border-radius: 14px;
+            padding: .85rem;
+            margin-bottom: .85rem;
+            background: #fff;
+        }
+        .mobile-card-table td {
+            border: 0;
+            padding: 0;
+            margin-bottom: .75rem;
+        }
+        .mobile-card-table td:last-child {
+            margin-bottom: 0;
+        }
+        .mobile-card-table td[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            font-size: .72rem;
+            font-weight: 700;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            margin-bottom: .3rem;
+        }
+        .mobile-card-table .form-check {
+            justify-content: flex-start;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-0">
-    <div class="mb-4">
-        <h2 class="mb-1">Condições de pagamento</h2>
-        <p class="text-muted mb-0">Cadastre e edite as formas de pagamento utilizadas nas vendas.</p>
+<div class="condicoes-shell">
+    <div>
+        <h3 class="mb-1">Condicoes de pagamento</h3>
+        <p class="condicoes-subtitle">Cadastre condicoes especificas para venda, compra ou ambas.</p>
     </div>
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white">
-            <strong>Nova condição</strong>
-        </div>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white"><strong>Busca</strong></div>
         <div class="card-body">
-            <form method="POST" action="{{ url_for('condicoes_pagamento_nova') }}">
-                <div class="condicoes-grid">
-                    <div class="col-4">
-                        <label class="form-label">Nome</label>
-                        <input type="text" name="nome" class="form-control" placeholder="Ex: Crédito 3x sem juros" required>
-                    </div>
-                    <div class="col-3">
-                        <label class="form-label">Forma de pagamento</label>
-                        <select name="forma_pagamento" class="form-select" required>
-                            <option value="">Selecione</option>
-                            <option value="Dinheiro">Dinheiro</option>
-                            <option value="PIX">PIX</option>
-                            <option value="Débito">Débito</option>
-                            <option value="Crédito">Crédito</option>
-                            <option value="Boleto">Boleto</option>
-                        </select>
-                    </div>
-                    <div class="col-2">
-                        <label class="form-label">Parcelas</label>
-                        <input type="number" name="parcelas" class="form-control" min="1" value="1" required>
-                    </div>
-                    <div class="col-2">
-                        <label class="form-label">Intervalo (dias)</label>
-                        <input type="number" name="dias_intervalo" class="form-control" min="0" value="30" required>
-                    </div>
-                    <div class="col-1">
-                        <label class="form-label">Taxa %</label>
-                        <input type="number" name="taxa_percentual" class="form-control" step="0.01" min="0" value="0" required>
-                    </div>
-                    <div class="col-12">
-                        <div class="form-check mt-2">
-                            <input type="checkbox" name="ativo" id="ativo" class="form-check-input" checked>
-                            <label for="ativo" class="form-check-label">Ativa</label>
-                        </div>
-                    </div>
+            <form method="GET" class="row g-3">
+                <div class="col-md-10">
+                    <label class="form-label">Nome, forma ou finalidade</label>
+                    <input type="text" name="q" class="form-control" value="{{ q or '' }}" placeholder="Digite para localizar">
                 </div>
-                <div class="d-flex gap-2 flex-wrap mt-3">
-                    <button type="submit" class="btn btn-dark">Salvar condição</button>
+                <div class="col-md-2 d-flex align-items-end gap-2 mobile-actions">
+                    <button class="btn btn-dark w-100">Buscar</button>
+                    <a href="{{ url_for('condicoes_pagamento') }}" class="btn btn-outline-secondary w-100">Limpar</a>
                 </div>
             </form>
         </div>
     </div>
 
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-white">
-            <strong>Condições cadastradas</strong>
-        </div>
+        <div class="card-header bg-white"><strong>Cadastradas</strong></div>
         <div class="card-body">
             {% if condicoes %}
-            <div class="table-responsive">
+            <div class="table-responsive table-card mobile-card-table">
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Nome</th>
+                            <th>Finalidade</th>
                             <th>Forma</th>
                             <th>Parcelas</th>
                             <th>Intervalo</th>
                             <th>Taxa %</th>
                             <th>Ativa</th>
-                            <th style="min-width: 180px;">Ações</th>
+                            <th>Acoes</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for c in condicoes %}
+                        <form id="condicao-form-{{ c.id }}" method="POST" action="{{ url_for('condicoes_pagamento_editar', condicao_id=c.id) }}"></form>
                         <tr>
-                            <td>{{ c.id }}</td>
-                            <td colspan="7">
-                                <form method="POST" action="{{ url_for('condicoes_pagamento_editar', condicao_id=c.id) }}">
-                                    <div class="condicoes-grid">
-                                        <div class="col-4">
-                                            <label class="form-label">Nome</label>
-                                            <input type="text" name="nome" class="form-control" value="{{ c.nome }}" required>
-                                        </div>
-                                        <div class="col-2">
-                                            <label class="form-label">Forma</label>
-                                            <select name="forma_pagamento" class="form-select" required>
-                                                <option value="Dinheiro" {% if c.forma_pagamento == 'Dinheiro' %}selected{% endif %}>Dinheiro</option>
-                                                <option value="PIX" {% if c.forma_pagamento == 'PIX' %}selected{% endif %}>PIX</option>
-                                                <option value="Débito" {% if c.forma_pagamento == 'Débito' %}selected{% endif %}>Débito</option>
-                                                <option value="Crédito" {% if c.forma_pagamento == 'Crédito' %}selected{% endif %}>Crédito</option>
-                                                <option value="Boleto" {% if c.forma_pagamento == 'Boleto' %}selected{% endif %}>Boleto</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-1">
-                                            <label class="form-label">Parcelas</label>
-                                            <input type="number" name="parcelas" class="form-control" min="1" value="{{ c.parcelas }}" required>
-                                        </div>
-                                        <div class="col-2">
-                                            <label class="form-label">Intervalo</label>
-                                            <input type="number" name="dias_intervalo" class="form-control" min="0" value="{{ c.dias_intervalo }}" required>
-                                        </div>
-                                        <div class="col-1">
-                                            <label class="form-label">Taxa %</label>
-                                            <input type="number" name="taxa_percentual" class="form-control" step="0.01" min="0" value="{{ c.taxa_percentual }}" required>
-                                        </div>
-                                        <div class="col-1">
-                                            <label class="form-label">Ativa</label>
-                                            <div class="checkbox-wrap">
-                                                <input type="checkbox" name="ativo" class="form-check-input" {% if c.ativo %}checked{% endif %}>
-                                            </div>
-                                        </div>
-                                        <div class="col-1">
-                                            <label class="form-label">&nbsp;</label>
-                                            <button type="submit" class="btn btn-dark w-100">Salvar</button>
-                                        </div>
-                                    </div>
-                                    <div class="muted mt-2">Criada em: {{ c.created_at }}</div>
-                                </form>
+                            <td data-label="ID">
+                                <strong>#{{ c.id }}</strong>
+                            </td>
+                            <td data-label="Nome">
+                                <input type="text" name="nome" class="form-control" value="{{ c.nome }}" form="condicao-form-{{ c.id }}" required>
+                            </td>
+                            <td data-label="Finalidade">
+                                <select name="finalidade" class="form-select" form="condicao-form-{{ c.id }}" required>
+                                    <option value="VENDA" {% if c.finalidade == 'VENDA' %}selected{% endif %}>Venda</option>
+                                    <option value="COMPRA" {% if c.finalidade == 'COMPRA' %}selected{% endif %}>Compra</option>
+                                    <option value="AMBOS" {% if c.finalidade == 'AMBOS' %}selected{% endif %}>Ambos</option>
+                                </select>
+                            </td>
+                            <td data-label="Forma">
+                                <select name="forma_pagamento" class="form-select" form="condicao-form-{{ c.id }}" required>
+                                    <option value="Dinheiro" {% if c.forma_pagamento == 'Dinheiro' %}selected{% endif %}>Dinheiro</option>
+                                    <option value="PIX" {% if c.forma_pagamento == 'PIX' %}selected{% endif %}>PIX</option>
+                                    <option value="Debito" {% if c.forma_pagamento in ['Debito', 'Débito', 'DÃ©bito', 'DÃƒÂ©bito', 'DÃƒÆ’Ã‚Â©bito'] %}selected{% endif %}>Debito</option>
+                                    <option value="Credito" {% if c.forma_pagamento in ['Credito', 'Crédito', 'CrÃ©dito', 'CrÃƒÂ©dito', 'CrÃƒÆ’Ã‚Â©dito'] %}selected{% endif %}>Credito</option>
+                                    <option value="Boleto" {% if c.forma_pagamento == 'Boleto' %}selected{% endif %}>Boleto</option>
+                                </select>
+                            </td>
+                            <td data-label="Parcelas">
+                                <input type="number" name="parcelas" class="form-control" min="1" value="{{ c.parcelas }}" form="condicao-form-{{ c.id }}" required>
+                            </td>
+                            <td data-label="Intervalo">
+                                <input type="number" name="dias_intervalo" class="form-control" min="0" value="{{ c.dias_intervalo }}" form="condicao-form-{{ c.id }}" required>
+                            </td>
+                            <td data-label="Taxa %">
+                                <input type="number" name="taxa_percentual" class="form-control" step="0.01" min="0" value="{{ c.taxa_percentual }}" form="condicao-form-{{ c.id }}" required>
+                            </td>
+                            <td data-label="Ativa">
+                                <div class="form-check">
+                                    <input type="checkbox" name="ativo" class="form-check-input" form="condicao-form-{{ c.id }}" {% if c.ativo %}checked{% endif %}>
+                                </div>
+                            </td>
+                            <td data-label="Acoes">
+                                <div class="d-flex flex-column gap-2">
+                                    <button type="submit" class="btn btn-sm btn-dark" form="condicao-form-{{ c.id }}">Salvar</button>
+                                    <small class="text-muted">{{ c.created_at.strftime('%d/%m/%Y') if c.created_at else '' }}</small>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -168,8 +179,60 @@
                 </table>
             </div>
             {% else %}
-                <div class="alert alert-info mb-0">Nenhuma condição cadastrada.</div>
+            <div class="alert alert-info mb-0">Nenhuma condicao cadastrada.</div>
             {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white"><strong>Novo cadastro</strong></div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('condicoes_pagamento_nova') }}">
+                <div class="compact-form-grid">
+                    <div>
+                        <label class="form-label">Nome</label>
+                        <input type="text" name="nome" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Finalidade</label>
+                        <select name="finalidade" class="form-select" required>
+                            <option value="VENDA">Venda</option>
+                            <option value="COMPRA">Compra</option>
+                            <option value="AMBOS">Ambos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Forma</label>
+                        <select name="forma_pagamento" class="form-select" required>
+                            <option value="">Selecione</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                            <option value="PIX">PIX</option>
+                            <option value="Debito">Debito</option>
+                            <option value="Credito">Credito</option>
+                            <option value="Boleto">Boleto</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Parcelas</label>
+                        <input type="number" name="parcelas" class="form-control" min="1" value="1" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Intervalo (dias)</label>
+                        <input type="number" name="dias_intervalo" class="form-control" min="0" value="30" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Taxa %</label>
+                        <input type="number" name="taxa_percentual" class="form-control" step="0.01" min="0" value="0" required>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mt-3">
+                    <div class="form-check">
+                        <input type="checkbox" name="ativo" class="form-check-input" checked>
+                        <label class="form-check-label">Condicao ativa</label>
+                    </div>
+                    <button type="submit" class="btn btn-dark">Salvar condicao</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

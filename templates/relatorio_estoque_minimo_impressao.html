@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ pdf_filename or 'relatorio-estoque-minimo.pdf' }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
+
+        body {
+            margin: 0;
+            color: #1f2937;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            background: #eef2f6;
+        }
+
+        .print-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 16px 20px 0;
+        }
+
+        .print-actions button {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #1f2937;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 190mm;
+            margin: 0 auto;
+            padding: 8mm 0 0;
+        }
+
+        .sheet {
+            background: #fff;
+            border-radius: 14px;
+            padding: 14mm 12mm 10mm;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 18px;
+            border-bottom: 2px solid #dbe5ef;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .brand-logo {
+            width: 68px;
+            height: 68px;
+            object-fit: contain;
+            border-radius: 12px;
+            border: 1px solid #dbe5ef;
+            padding: 6px;
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0 0 4px;
+        }
+
+        .report-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 6px;
+            color: #102a43;
+        }
+
+        .report-subtitle,
+        .meta-line {
+            color: #52606d;
+            margin: 0;
+            line-height: 1.45;
+        }
+
+        .meta-box {
+            min-width: 220px;
+            border: 1px solid #dbe5ef;
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: #f8fbff;
+        }
+
+        .meta-label {
+            color: #7b8794;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            font-size: 9px;
+            margin-bottom: 2px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .summary-card {
+            border: 1px solid #dbe5ef;
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+
+        .summary-label {
+            color: #7b8794;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 4px;
+        }
+
+        .summary-value {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1;
+            color: #102a43;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #dbe5ef;
+            padding: 6px 7px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #edf3f8;
+            color: #486581;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        td.numeric {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .status {
+            font-weight: 700;
+        }
+
+        .status.abaixo { color: #b42318; }
+        .status.ideal { color: #2447a4; }
+        .status.acima { color: #067647; }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid #dbe5ef;
+            color: #6b7280;
+            font-size: 10px;
+        }
+
+        .footer-brand {
+            font-weight: 700;
+            color: #102a43;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .print-actions {
+                display: none;
+            }
+
+            .page {
+                max-width: none;
+                padding-top: 0;
+            }
+
+            .sheet {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-actions">
+        <button type="button" onclick="window.print()">Imprimir / Salvar PDF</button>
+        <button type="button" onclick="window.close()">Fechar</button>
+    </div>
+
+    <div class="page">
+        <div class="sheet">
+            <div class="header">
+                <div class="brand">
+                    {% if empresa_logo_url %}
+                    <img src="{{ empresa_logo_url }}" alt="Logo da empresa" class="brand-logo">
+                    {% endif %}
+                    <div>
+                        <p class="brand-name">{{ empresa_brand_name or 'ERP Vendas' }}</p>
+                        <h1 class="report-name">Relatorio de Estoque Minimo</h1>
+                        <p class="report-subtitle">Analise profissional de reposicao com base no estoque atual e no estoque minimo cadastrado.</p>
+                    </div>
+                </div>
+
+                <div class="meta-box">
+                    <div class="meta-label">Emissao</div>
+                    <p class="meta-line">{{ data_impressao.strftime('%d/%m/%Y %H:%M') if data_impressao else '-' }}</p>
+                    <div class="meta-label" style="margin-top: 8px;">Usuario</div>
+                    <p class="meta-line">{{ session_user_nome or '-' }}</p>
+                    <div class="meta-label" style="margin-top: 8px;">Filtro</div>
+                    <p class="meta-line">{{ termo or 'Todos os produtos' }}</p>
+                </div>
+            </div>
+
+            <div class="summary">
+                <div class="summary-card">
+                    <div class="summary-label">Produtos</div>
+                    <div class="summary-value">{{ total_produtos }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Abaixo do minimo</div>
+                    <div class="summary-value">{{ abaixo_minimo }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">No ideal</div>
+                    <div class="summary-value">{{ no_minimo }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Sugestao de compra</div>
+                    <div class="summary-value">{{ '%.2f'|format(total_sugerido or 0) }}</div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Produto</th>
+                        <th>Familia</th>
+                        <th>Und</th>
+                        <th>Atual</th>
+                        <th>Minimo</th>
+                        <th>Saldo</th>
+                        <th>Sugestao</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in produtos %}
+                    <tr>
+                        <td>{{ produto.codigo or '-' }}</td>
+                        <td>{{ produto.descricao }}</td>
+                        <td>{{ produto.categoria or '-' }}</td>
+                        <td>{{ produto.unidade or '-' }}</td>
+                        <td class="numeric">{{ '%.2f'|format((produto.estoque_atual or 0)|float) }}</td>
+                        <td class="numeric">{{ '%.2f'|format((produto.estoque_minimo or 0)|float) }}</td>
+                        <td class="numeric">{{ '%.2f'|format((produto.saldo_minimo or 0)|float) }}</td>
+                        <td class="numeric">{{ '%.2f'|format((produto.sugestao_compra or 0)|float) }}</td>
+                        <td>
+                            {% if produto.status_estoque == 'abaixo' %}
+                            <span class="status abaixo">Comprar</span>
+                            {% elif produto.status_estoque == 'ideal' %}
+                            <span class="status ideal">Perfeito</span>
+                            {% else %}
+                            <span class="status acima">Acima do minimo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9">Nenhum produto encontrado para o filtro informado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="footer">
+                <div>Arquivo sugerido: {{ pdf_filename }}</div>
+                <div class="footer-brand">@rbcorp</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

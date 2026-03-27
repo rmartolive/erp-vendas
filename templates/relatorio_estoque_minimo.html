@@ -46,6 +46,7 @@
             <h3 class="mb-1">Relatorio de estoque minimo</h3>
             <p class="report-subtitle">Compara estoque atual com estoque minimo e sugere compra quando o saldo estiver abaixo do ideal.</p>
         </div>
+        <a href="{{ url_for('relatorio_estoque_minimo_imprimir', q=termo) }}" class="btn btn-outline-primary">Gerar PDF</a>
     </div>
 
     <div class="card shadow-sm border-0">

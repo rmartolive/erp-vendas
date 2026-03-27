@@ -4,7 +4,7 @@
 <div class="container-fluid">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Clientes</h2>
+        <h2>Clientes e fornecedores</h2>
     </div>
 
     <div class="card shadow-sm border-0 mb-4">
@@ -13,19 +13,19 @@
         </div>
         <div class="card-body">
             <form method="GET" class="row g-2">
-                <div class="col-md-10">
-                    <input
-                        type="text"
-                        name="q"
-                        class="form-control"
-                        placeholder="Buscar por nome, documento, telefone ou e-mail"
-                        value="{{ termo }}"
-                    >
+                <div class="col-md-7">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por nome, documento, telefone ou e-mail" value="{{ termo }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="tipo_cadastro" class="form-select">
+                        <option value="">Todos os cadastros</option>
+                        <option value="CLIENTE" {% if tipo_cadastro == 'CLIENTE' %}selected{% endif %}>Cliente</option>
+                        <option value="FORNECEDOR" {% if tipo_cadastro == 'FORNECEDOR' %}selected{% endif %}>Fornecedor</option>
+                        <option value="AMBOS" {% if tipo_cadastro == 'AMBOS' %}selected{% endif %}>Ambos</option>
+                    </select>
                 </div>
                 <div class="col-md-2">
-                    <button class="btn btn-dark w-100">
-                        <i class="bi bi-search"></i> Buscar
-                    </button>
+                    <button class="btn btn-dark w-100"><i class="bi bi-search"></i> Buscar</button>
                 </div>
             </form>
         </div>
@@ -33,7 +33,7 @@
 
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-white">
-            <strong>Lista de clientes</strong>
+            <strong>Lista de cadastros</strong>
         </div>
         <div class="card-body">
             {% if pessoas %}
@@ -42,7 +42,8 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Tipo</th>
+                            <th>Cadastro</th>
+                            <th>Pessoa</th>
                             <th>Nome</th>
                             <th>Documento</th>
                             <th>Telefone</th>
@@ -56,6 +57,7 @@
                         {% for p in pessoas %}
                         <tr>
                             <td>{{ p.id }}</td>
+                            <td>{{ p.tipo_cadastro }}</td>
                             <td>{{ p.tipo }}</td>
                             <td>{{ p.nome }}</td>
                             <td>{{ p.documento }}</td>
@@ -80,22 +82,29 @@
                 </table>
             </div>
             {% else %}
-            <div class="alert alert-info mb-0">
-                Nenhum cliente encontrado.
-            </div>
+            <div class="alert alert-info mb-0">Nenhum cadastro encontrado.</div>
             {% endif %}
         </div>
     </div>
 
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white">
-            <strong>Novo cliente</strong>
+            <strong>Novo cadastro</strong>
         </div>
         <div class="card-body">
             <form method="POST" action="/pessoas/novo">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label">Tipo{% if config.cliente_tipo_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <label class="form-label">Tipo de cadastro</label>
+                        <select name="tipo_cadastro" class="form-select">
+                            <option value="CLIENTE">Cliente</option>
+                            <option value="FORNECEDOR">Fornecedor</option>
+                            <option value="AMBOS">Ambos</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo de pessoa{% if config.cliente_tipo_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <select name="tipo" class="form-select">
                             <option value="FISICA">Física</option>
                             <option value="JURIDICA">Jurídica</option>
@@ -112,17 +121,17 @@
                         <input type="text" name="documento" class="form-control">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Telefone{% if config.cliente_telefone_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="telefone" class="form-control">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">E-mail{% if config.cliente_email_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="email" name="email" class="form-control">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">CEP{% if config.cliente_cep_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="cep" class="form-control">
                     </div>
@@ -155,9 +164,7 @@
                     </div>
 
                     <div class="col-md-3 d-flex align-items-end">
-                        <button class="btn btn-dark w-100">
-                            <i class="bi bi-save"></i> Salvar
-                        </button>
+                        <button class="btn btn-dark w-100"><i class="bi bi-save"></i> Salvar</button>
                     </div>
                 </div>
             </form>
