@@ -7,14 +7,20 @@
         <h2>Clientes</h2>
     </div>
 
-    <!-- BUSCA -->
-    <div class="card shadow-sm border-0 mb-3">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <strong>Busca</strong>
+        </div>
         <div class="card-body">
             <form method="GET" class="row g-2">
                 <div class="col-md-10">
-                    <input type="text" name="q" class="form-control"
-                           placeholder="Buscar por nome, documento, telefone ou email"
-                           value="{{ termo }}">
+                    <input
+                        type="text"
+                        name="q"
+                        class="form-control"
+                        placeholder="Buscar por nome, documento, telefone ou e-mail"
+                        value="{{ termo }}"
+                    >
                 </div>
                 <div class="col-md-2">
                     <button class="btn btn-dark w-100">
@@ -25,18 +31,71 @@
         </div>
     </div>
 
-    <!-- FORM CADASTRO -->
     <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white">
+            <strong>Lista de clientes</strong>
+        </div>
+        <div class="card-body">
+            {% if pessoas %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tipo</th>
+                            <th>Nome</th>
+                            <th>Documento</th>
+                            <th>Telefone</th>
+                            <th>E-mail</th>
+                            <th>Cidade</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pessoas %}
+                        <tr>
+                            <td>{{ p.id }}</td>
+                            <td>{{ p.tipo }}</td>
+                            <td>{{ p.nome }}</td>
+                            <td>{{ p.documento }}</td>
+                            <td>{{ p.telefone }}</td>
+                            <td>{{ p.email }}</td>
+                            <td>{{ p.cidade }}/{{ p.estado }}</td>
+                            <td>
+                                {% if p.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inativo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('pessoas_editar', pessoa_id=p.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">
+                Nenhum cliente encontrado.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
         <div class="card-header bg-white">
             <strong>Novo cliente</strong>
         </div>
         <div class="card-body">
-
             <form method="POST" action="/pessoas/novo">
                 <div class="row g-3">
-
                     <div class="col-md-3">
-                        <label class="form-label">Tipo</label>
+                        <label class="form-label">Tipo{% if config.cliente_tipo_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <select name="tipo" class="form-select">
                             <option value="FISICA">Física</option>
                             <option value="JURIDICA">Jurídica</option>
@@ -44,47 +103,47 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Nome *</label>
+                        <label class="form-label">Nome{% if config.cliente_nome_obrigatorio or not config %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="nome" class="form-control" required>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label">CPF / CNPJ</label>
+                        <label class="form-label">CPF / CNPJ{% if config.cliente_documento_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="documento" class="form-control">
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Telefone</label>
+                        <label class="form-label">Telefone{% if config.cliente_telefone_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="telefone" class="form-control">
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">E-mail</label>
+                        <label class="form-label">E-mail{% if config.cliente_email_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="email" name="email" class="form-control">
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">CEP</label>
+                        <label class="form-label">CEP{% if config.cliente_cep_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="cep" class="form-control">
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Endereço</label>
+                        <label class="form-label">Endereço{% if config.cliente_endereco_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="endereco" class="form-control">
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Cidade</label>
+                        <label class="form-label">Cidade{% if config.cliente_cidade_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="cidade" class="form-control">
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label">UF</label>
+                        <label class="form-label">UF{% if config.cliente_estado_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <input type="text" name="estado" maxlength="2" class="form-control">
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label">Observações</label>
+                        <label class="form-label">Observações{% if config.cliente_observacoes_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
                         <textarea name="observacoes" class="form-control"></textarea>
                     </div>
 
@@ -100,70 +159,8 @@
                             <i class="bi bi-save"></i> Salvar
                         </button>
                     </div>
-
                 </div>
             </form>
-
-        </div>
-    </div>
-
-    <!-- TABELA -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white">
-            <strong>Lista de clientes</strong>
-        </div>
-        <div class="card-body">
-
-            {% if pessoas %}
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Tipo</th>
-                            <th>Nome</th>
-                            <th>Documento</th>
-                            <th>Telefone</th>
-                            <th>Email</th>
-                            <th>Cidade</th>
-                            <th>Status</th>
-                            <th>Criado</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for p in pessoas %}
-                        <tr>
-                            <td>{{ p.id }}</td>
-                            <td>{{ p.tipo }}</td>
-                            <td>{{ p.nome }}</td>
-                            <td>{{ p.documento }}</td>
-                            <td>{{ p.telefone }}</td>
-                            <td>{{ p.email }}</td>
-                            <td>{{ p.cidade }}/{{ p.estado }}</td>
-
-                            <td>
-                                {% if p.ativo %}
-                                    <span class="badge bg-success">Ativo</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Inativo</span>
-                                {% endif %}
-                            </td>
-
-                            <td>{{ p.created_at }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-
-                </table>
-            </div>
-            {% else %}
-                <div class="alert alert-info mb-0">
-                    Nenhum cliente encontrado.
-                </div>
-            {% endif %}
-
         </div>
     </div>
 

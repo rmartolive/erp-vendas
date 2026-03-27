@@ -1,94 +1,227 @@
 {% extends "base.html" %}
-
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
 {% block content %}
-<div class="container-fluid px-0">
-    <div class="mb-4">
-        <h2 class="mb-1">Dashboard</h2>
-        <p class="text-muted mb-0">Visão geral do sistema</p>
+<style>
+    .dashboard-shell { display: grid; gap: 1rem; }
+    .dashboard-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+    .dashboard-subtitle { color: #6c757d; margin: 0; }
+    .filter-card, .data-card {
+        border: 1px solid #e9ecef;
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 .5rem 1rem rgba(15, 23, 42, .05);
+    }
+    .kpi-card {
+        border-radius: 1rem;
+        border: 1px solid #e9ecef;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        box-shadow: 0 .5rem 1rem rgba(15, 23, 42, .05);
+        height: 100%;
+    }
+    .kpi-label { color: #6c757d; font-size: .9rem; margin-bottom: .35rem; }
+    .kpi-value { font-size: 2rem; font-weight: 700; color: #0f172a; line-height: 1; }
+    .table-wrap { border: 1px solid #eef1f4; border-radius: .9rem; overflow: hidden; }
+    .table-wrap .table { margin: 0; }
+    .table-wrap thead th {
+        background: #f8f9fa;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #6c757d;
+    }
+    .section-caption { color: #6c757d; font-size: .92rem; }
+    .family-tag {
+        display: inline-flex;
+        padding: .25rem .55rem;
+        border-radius: 999px;
+        background: #eef4ff;
+        color: #2447a4;
+        font-size: .78rem;
+        font-weight: 600;
+    }
+    @media (max-width: 991px) {
+        .dashboard-header { flex-direction: column; align-items: stretch; }
+    }
+</style>
+
+<div class="dashboard-shell">
+    <div class="dashboard-header">
+        <div>
+            <h3 class="mb-1">Dashboard comercial</h3>
+            <p class="dashboard-subtitle">Acompanhe vendas do periodo, rentabilidade por familia e desempenho dos produtos.</p>
+        </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="text-muted">Clientes</div>
-                    <div class="fs-2 fw-bold">{{ total_clientes }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="text-muted">Produtos</div>
-                    <div class="fs-2 fw-bold">{{ total_produtos }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="text-muted">Usuários</div>
-                    <div class="fs-2 fw-bold">{{ total_usuarios }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="text-muted">Estoque total</div>
-                    <div class="fs-2 fw-bold">{{ estoque_total }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
+    <div class="filter-card card shadow-sm border-0">
         <div class="card-header bg-white">
-            <strong>Últimos clientes cadastrados</strong>
+            <strong>Filtros</strong>
         </div>
         <div class="card-body">
-            {% if ultimos_clientes %}
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Cliente</label>
+                    <select name="cliente_id" class="form-select">
+                        <option value="">Todos</option>
+                        {% for cliente in clientes %}
+                        <option value="{{ cliente.id }}" {% if cliente_id == cliente.id %}selected{% endif %}>{{ cliente.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data inicial</label>
+                    <input type="date" name="data_ini" class="form-control" value="{{ data_ini }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data final</label>
+                    <input type="date" name="data_fim" class="form-control" value="{{ data_fim }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button class="btn btn-dark w-100">Filtrar</button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary w-100">Limpar</a>
+                </div>
+            </form>
+            {% if cliente_nome or data_ini or data_fim %}
+            <div class="section-caption mt-3">
+                {% if cliente_nome %}Cliente: <strong>{{ cliente_nome }}</strong>{% endif %}
+                {% if data_ini or data_fim %} {% if cliente_nome %}|{% endif %} Periodo: <strong>{{ data_ini or 'inicio' }}</strong> ate <strong>{{ data_fim or 'hoje' }}</strong>{% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="kpi-card card border-0">
+                <div class="card-body">
+                    <div class="kpi-label">Quantidade de vendas do periodo</div>
+                    <div class="kpi-value">{{ quantidade_vendas }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="kpi-card card border-0">
+                <div class="card-body">
+                    <div class="kpi-label">Ticket medio por venda</div>
+                    <div class="kpi-value">R$ {{ '%.2f'|format(ticket_medio or 0) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="data-card card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Vendas resumidas por categoria</strong>
+        </div>
+        <div class="card-body">
+            <p class="section-caption mb-3">Resumo agrupado por familia para avaliar venda, custo, liquido e margem.</p>
+            {% if vendas_por_categoria %}
+            <div class="table-responsive table-wrap">
+                <table class="table table-hover align-middle">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Tipo</th>
-                            <th>Nome</th>
-                            <th>Documento</th>
-                            <th>Telefone</th>
-                            <th>Email</th>
-                            <th>Ativo</th>
-                            <th>Criado em</th>
+                            <th>Categoria</th>
+                            <th>Valor da venda</th>
+                            <th>Custo</th>
+                            <th>Liquido</th>
+                            <th>Margem %</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for c in ultimos_clientes %}
+                        {% for linha in vendas_por_categoria %}
                         <tr>
-                            <td>{{ c.id }}</td>
-                            <td>{{ c.tipo }}</td>
-                            <td>{{ c.nome }}</td>
-                            <td>{{ c.documento }}</td>
-                            <td>{{ c.telefone }}</td>
-                            <td>{{ c.email }}</td>
-                            <td>
-                                {% if c.ativo %}
-                                    <span class="badge bg-success">Sim</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Não</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ c.created_at }}</td>
+                            <td><span class="family-tag">{{ linha.categoria }}</span></td>
+                            <td>R$ {{ '%.2f'|format((linha.valor_venda or 0)|float) }}</td>
+                            <td>R$ {{ '%.2f'|format((linha.custo or 0)|float) }}</td>
+                            <td>R$ {{ '%.2f'|format((linha.liquido or 0)|float) }}</td>
+                            <td>{{ '%.2f'|format((linha.margem_percentual or 0)|float) }}%</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-                <div class="alert alert-info mb-0">Nenhum cliente cadastrado.</div>
+            <div class="alert alert-info mb-0">Nenhuma venda encontrada para os filtros informados.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="data-card card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Vendas listadas</strong>
+        </div>
+        <div class="card-body">
+            <p class="section-caption mb-3">Itens vendidos no periodo, com produto, cliente, data e valor de cada item.</p>
+            {% if vendas_listadas %}
+            <div class="table-responsive table-wrap">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Venda</th>
+                            <th>Cliente</th>
+                            <th>Produto</th>
+                            <th>Categoria</th>
+                            <th>Qtd</th>
+                            <th>Vlr unit.</th>
+                            <th>Total item</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in vendas_listadas %}
+                        <tr>
+                            <td>{{ item.data_venda.strftime('%d/%m/%Y') if item.data_venda else '-' }}</td>
+                            <td>#{{ item.venda_id }}</td>
+                            <td>{{ item.cliente or '-' }}</td>
+                            <td>{{ item.produto or '-' }}</td>
+                            <td>{{ item.categoria or '-' }}</td>
+                            <td>{{ item.quantidade }}</td>
+                            <td>R$ {{ '%.2f'|format((item.valor_unitario or 0)|float) }}</td>
+                            <td>R$ {{ '%.2f'|format((item.total_item or 0)|float) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">Nao ha itens vendidos para os filtros selecionados.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="data-card card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Ranking de produtos mais vendidos</strong>
+        </div>
+        <div class="card-body">
+            <p class="section-caption mb-3">Produtos ordenados pela quantidade vendida no periodo filtrado.</p>
+            {% if ranking_produtos %}
+            <div class="table-responsive table-wrap">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Produto</th>
+                            <th>Categoria</th>
+                            <th>Qtd vendida</th>
+                            <th>Valor vendido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produto in ranking_produtos %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ produto.produto }}</td>
+                            <td>{{ produto.categoria }}</td>
+                            <td>{{ produto.quantidade_vendida }}</td>
+                            <td>R$ {{ '%.2f'|format((produto.valor_vendido or 0)|float) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">Nao ha ranking para o periodo informado.</div>
             {% endif %}
         </div>
     </div>

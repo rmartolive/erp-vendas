@@ -7,61 +7,180 @@
     <a href="{{ url_for('empresas') }}" class="btn btn-outline-secondary">Voltar para listagem</a>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <form method="post" class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label">Nome fantasia</label>
-                <input type="text" class="form-control" name="nome_fantasia" value="{{ empresa.nome_fantasia if empresa else '' }}" required>
+<form method="post" enctype="multipart/form-data" class="row g-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <strong>Dados da empresa</strong>
             </div>
-            <div class="col-md-6">
-                <label class="form-label">Razão social</label>
-                <input type="text" class="form-control" name="razao_social" value="{{ empresa.razao_social if empresa else '' }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">CNPJ</label>
-                <input type="text" class="form-control" name="cnpj" value="{{ empresa.cnpj if empresa else '' }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Telefone</label>
-                <input type="text" class="form-control" name="telefone" value="{{ empresa.telefone if empresa else '' }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">E-mail</label>
-                <input type="email" class="form-control" name="email" value="{{ empresa.email if empresa else '' }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Cidade</label>
-                <input type="text" class="form-control" name="cidade" value="{{ empresa.cidade if empresa else '' }}">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">UF</label>
-                <input type="text" class="form-control" maxlength="2" name="estado" value="{{ empresa.estado if empresa else '' }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Responsável</label>
-                <input type="text" class="form-control" name="responsavel" value="{{ empresa.responsavel if empresa else '' }}">
-            </div>
-            <div class="col-md-8">
-                <div class="form-check mt-4">
-                    <input class="form-check-input" type="checkbox" name="permite_estoque_negativo" id="permite_estoque_negativo" {% if empresa and empresa.permite_estoque_negativo %}checked{% endif %}>
-                    <label class="form-check-label" for="permite_estoque_negativo">
-                        Permitir venda com estoque negativo
-                    </label>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nome fantasia</label>
+                        <input type="text" class="form-control" name="nome_fantasia" value="{{ empresa.nome_fantasia if empresa else '' }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Razão social</label>
+                        <input type="text" class="form-control" name="razao_social" value="{{ empresa.razao_social if empresa else '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">CNPJ</label>
+                        <input type="text" class="form-control" name="cnpj" value="{{ empresa.cnpj if empresa else '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Telefone</label>
+                        <input type="text" class="form-control" name="telefone" value="{{ empresa.telefone if empresa else '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">E-mail</label>
+                        <input type="email" class="form-control" name="email" value="{{ empresa.email if empresa else '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cidade</label>
+                        <input type="text" class="form-control" name="cidade" value="{{ empresa.cidade if empresa else '' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">UF</label>
+                        <input type="text" class="form-control" maxlength="2" name="estado" value="{{ empresa.estado if empresa else '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Responsável</label>
+                        <input type="text" class="form-control" name="responsavel" value="{{ empresa.responsavel if empresa else '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" type="checkbox" name="ativo" id="ativo" {% if not empresa or empresa.ativo %}checked{% endif %}>
+                            <label class="form-check-label" for="ativo">Empresa ativa</label>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Logo da empresa (JPEG)</label>
+                        <input type="file" class="form-control" name="logo" accept=".jpg,.jpeg,image/jpeg">
+                        <div class="form-text">Use um arquivo JPEG. O sistema vai exibir o logo com o nome da empresa no menu e no login.</div>
+                    </div>
+                    {% if empresa and empresa.logo_path %}
+                    <div class="col-md-4">
+                        <div class="border rounded-3 p-3 bg-light h-100 d-flex flex-column justify-content-center">
+                            <div class="small text-muted mb-2">Logo atual</div>
+                            <img src="{{ url_for('empresa_logo', filename=empresa.logo_path) }}" alt="Logo da empresa" class="img-fluid" style="max-height: 100px; object-fit: contain;">
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
-            <div class="col-md-4 d-flex align-items-end">
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" name="ativo" id="ativo" {% if not empresa or empresa.ativo %}checked{% endif %}>
-                    <label class="form-check-label" for="ativo">Empresa ativa</label>
-                </div>
-            </div>
-
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">Salvar</button>
-                <a href="{{ url_for('empresas') }}" class="btn btn-outline-secondary">Cancelar</a>
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <strong>Cadastro de produtos</strong>
+            </div>
+            <div class="card-body row g-2">
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="produto_codigo_obrigatorio" id="produto_codigo_obrigatorio" {% if empresa and empresa.produto_codigo_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="produto_codigo_obrigatorio">Código obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="produto_familia_obrigatoria" id="produto_familia_obrigatoria" {% if empresa and empresa.produto_familia_obrigatoria %}checked{% endif %}>
+                    <label class="form-check-label" for="produto_familia_obrigatoria">Família obrigatória</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="produto_unidade_obrigatoria" id="produto_unidade_obrigatoria" {% if empresa and empresa.produto_unidade_obrigatoria %}checked{% endif %}>
+                    <label class="form-check-label" for="produto_unidade_obrigatoria">Unidade obrigatória</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="produto_custo_obrigatorio" id="produto_custo_obrigatorio" {% if empresa and empresa.produto_custo_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="produto_custo_obrigatorio">Custo obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="produto_preco_venda_obrigatorio" id="produto_preco_venda_obrigatorio" {% if empresa and empresa.produto_preco_venda_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="produto_preco_venda_obrigatorio">Preço de venda obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="produto_estoque_atual_obrigatorio" id="produto_estoque_atual_obrigatorio" {% if empresa and empresa.produto_estoque_atual_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="produto_estoque_atual_obrigatorio">Estoque atual obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="produto_estoque_minimo_obrigatorio" id="produto_estoque_minimo_obrigatorio" {% if empresa and empresa.produto_estoque_minimo_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="produto_estoque_minimo_obrigatorio">Estoque mínimo obrigatório</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <strong>Clientes</strong>
+            </div>
+            <div class="card-body row g-2">
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="cliente_tipo_obrigatorio" id="cliente_tipo_obrigatorio" {% if empresa and empresa.cliente_tipo_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="cliente_tipo_obrigatorio">Tipo obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="cliente_nome_obrigatorio" id="cliente_nome_obrigatorio" {% if empresa and empresa.cliente_nome_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="cliente_nome_obrigatorio">Nome obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="cliente_documento_obrigatorio" id="cliente_documento_obrigatorio" {% if empresa and empresa.cliente_documento_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="cliente_documento_obrigatorio">CPF/CNPJ obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="cliente_telefone_obrigatorio" id="cliente_telefone_obrigatorio" {% if empresa and empresa.cliente_telefone_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="cliente_telefone_obrigatorio">Telefone obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="cliente_email_obrigatorio" id="cliente_email_obrigatorio" {% if empresa and empresa.cliente_email_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="cliente_email_obrigatorio">E-mail obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="cliente_cep_obrigatorio" id="cliente_cep_obrigatorio" {% if empresa and empresa.cliente_cep_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="cliente_cep_obrigatorio">CEP obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="cliente_endereco_obrigatorio" id="cliente_endereco_obrigatorio" {% if empresa and empresa.cliente_endereco_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="cliente_endereco_obrigatorio">Endereço obrigatório</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="cliente_cidade_obrigatorio" id="cliente_cidade_obrigatorio" {% if empresa and empresa.cliente_cidade_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="cliente_cidade_obrigatorio">Cidade obrigatória</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="cliente_estado_obrigatorio" id="cliente_estado_obrigatorio" {% if empresa and empresa.cliente_estado_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="cliente_estado_obrigatorio">UF obrigatória</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="cliente_observacoes_obrigatorio" id="cliente_observacoes_obrigatorio" {% if empresa and empresa.cliente_observacoes_obrigatorio %}checked{% endif %}>
+                    <label class="form-check-label" for="cliente_observacoes_obrigatorio">Observações obrigatórias</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <strong>Vendas</strong>
+            </div>
+            <div class="card-body row g-2">
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="permite_estoque_negativo" id="permite_estoque_negativo" {% if empresa and empresa.permite_estoque_negativo %}checked{% endif %}>
+                    <label class="form-check-label" for="permite_estoque_negativo">Permite saldo negativo nas vendas</label>
+                </div>
+                <div class="col-12 form-check">
+                    <input class="form-check-input" type="checkbox" name="permite_desconto" id="permite_desconto" {% if empresa and empresa.permite_desconto %}checked{% endif %}>
+                    <label class="form-check-label" for="permite_desconto">Permite desconto</label>
+                    <div class="form-text">Quando marcado, o sistema bloqueia descontos mesmo para administrador.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a href="{{ url_for('empresas') }}" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+</form>
 {% endblock %}

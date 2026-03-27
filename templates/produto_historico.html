@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Historico do produto{% endblock %}
+{% block topbar_title %}Historico do produto{% endblock %}
+{% block content %}
+<style>
+    .history-shell { display: grid; gap: 1rem; }
+    .history-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+    .history-subtitle { color: #6c757d; margin: 0; }
+    .info-card, .table-card {
+        border: 1px solid #e9ecef;
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 .5rem 1rem rgba(15, 23, 42, .05);
+    }
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: .25rem .55rem;
+        border-radius: 999px;
+        font-size: .78rem;
+        font-weight: 600;
+    }
+    .tag.entrada { background: #ecfdf3; color: #067647; }
+    .tag.saida { background: #fdecec; color: #b42318; }
+    .tag.ajuste { background: #eef4ff; color: #2447a4; }
+    .qty-tone {
+        display: inline-flex;
+        align-items: center;
+        padding: .25rem .55rem;
+        border-radius: 999px;
+        font-weight: 600;
+    }
+    .qty-tone.entrada { background: #ecf7f0; color: #2d6a4f; }
+    .qty-tone.saida { background: #fdeff5; color: #b84c74; }
+    .qty-tone.neutro { background: #f3f4f6; color: #6b7280; }
+    .user-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: .25rem .6rem;
+        border-radius: 999px;
+        background: #eef4ff;
+        color: #3451a3;
+        font-weight: 600;
+    }
+    .table-wrap { border: 1px solid #eef1f4; border-radius: .9rem; overflow: hidden; }
+    .table-wrap .table { margin: 0; }
+    .table-wrap thead th {
+        background: #f8f9fa;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #6c757d;
+    }
+    @media (max-width: 991px) {
+        .history-header { flex-direction: column; align-items: stretch; }
+    }
+</style>
+
+<div class="history-shell">
+    <div class="history-header">
+        <div>
+            <h3 class="mb-1">Historico de movimentacao</h3>
+            <p class="history-subtitle">Produto: <strong>{{ produto.descricao }}</strong>{% if produto.codigo %} | Codigo: <strong>{{ produto.codigo }}</strong>{% endif %}</p>
+        </div>
+        <a href="{{ url_for('produtos') }}" class="btn btn-outline-secondary">Voltar para produtos</a>
+    </div>
+
+    <div class="info-card card shadow-sm border-0">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="small text-muted">Familia</div>
+                    <div class="fw-semibold">{{ produto.categoria or '-' }}</div>
+                </div>
+                <div class="col-md-2">
+                    <div class="small text-muted">Unidade</div>
+                    <div class="fw-semibold">{{ produto.unidade or '-' }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Estoque atual</div>
+                    <div class="fw-semibold">{{ produto.estoque_atual }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Estoque minimo</div>
+                    <div class="fw-semibold">{{ produto.estoque_minimo }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-card card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Movimentacoes</strong>
+        </div>
+        <div class="card-body">
+            {% if movimentacoes %}
+            <div class="table-responsive table-wrap">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Origem</th>
+                            <th>Referencia</th>
+                            <th>Quantidade</th>
+                            <th>Antes</th>
+                            <th>Depois</th>
+                            <th>Usuario</th>
+                            <th>Observacao</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mov in movimentacoes %}
+                        <tr>
+                            <td>{{ mov.created_at.strftime('%d/%m/%Y %H:%M') if mov.created_at else '-' }}</td>
+                            <td>
+                                {% if (mov.quantidade or 0)|float > 0 %}
+                                <span class="tag entrada">{{ mov.tipo_movimento }}</span>
+                                {% elif (mov.quantidade or 0)|float < 0 %}
+                                <span class="tag saida">{{ mov.tipo_movimento }}</span>
+                                {% else %}
+                                <span class="tag ajuste">{{ mov.tipo_movimento }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ mov.origem or '-' }}</td>
+                            <td>{% if mov.referencia_id %}#{{ mov.referencia_id }}{% else %}-{% endif %}</td>
+                            <td>
+                                {% if (mov.quantidade or 0)|float > 0 %}
+                                <span class="qty-tone entrada">{{ mov.quantidade|format_qty }}</span>
+                                {% elif (mov.quantidade or 0)|float < 0 %}
+                                <span class="qty-tone saida">{{ mov.quantidade|format_qty }}</span>
+                                {% else %}
+                                <span class="qty-tone neutro">{{ mov.quantidade|format_qty }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ mov.estoque_anterior|format_qty }}</td>
+                            <td>{{ mov.estoque_posterior|format_qty }}</td>
+                            <td>
+                                {% if mov.usuario_nome or mov.usuario_username %}
+                                <span class="user-chip">{{ mov.usuario_nome or mov.usuario_username }}</span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ mov.observacao or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-0">Nao ha movimentacoes registradas para este produto.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

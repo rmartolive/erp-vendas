@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Editar usuario{% endblock %}
+{% block topbar_title %}Editar usuario{% endblock %}
+{% block content %}
+<style>
+    .user-edit-shell { display: grid; gap: 1rem; }
+    .user-edit-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+    .user-edit-subtitle { color: #6c757d; margin: 0; }
+    .user-edit-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1rem; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-6 { grid-column: span 6; }
+    .span-12 { grid-column: span 12; }
+    .permission-panel {
+        border: 1px solid #e9ecef;
+        border-radius: 1rem;
+        padding: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+        height: 100%;
+    }
+    .permission-grid { display: grid; gap: .75rem; }
+    .permission-item {
+        border: 1px solid #edf0f2;
+        border-radius: .85rem;
+        padding: .85rem .9rem;
+        background: #fff;
+    }
+    .permission-item .form-check { margin: 0; }
+    .permission-item small { display: block; color: #6c757d; margin-top: .25rem; }
+    @media (max-width: 991px) {
+        .user-edit-header { flex-direction: column; align-items: stretch; }
+        .user-edit-grid { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .span-3, .span-4, .span-6, .span-12 { grid-column: auto; }
+    }
+</style>
+
+<div class="user-edit-shell">
+    <div class="user-edit-header">
+        <div>
+            <h3 class="mb-1">Editar usuario</h3>
+            <p class="user-edit-subtitle">Revise os dados de acesso e as permissoes operacionais deste usuario.</p>
+        </div>
+        <a href="{{ url_for('usuarios') }}" class="btn btn-outline-secondary">Voltar para usuarios</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>{{ usuario.nome or 'Usuario' }}</strong>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="user-edit-grid">
+                <div class="span-4">
+                    <label class="form-label">Nome</label>
+                    <input type="text" name="nome" class="form-control" value="{{ usuario.nome or '' }}" required>
+                </div>
+                <div class="span-4">
+                    <label class="form-label">Usuario</label>
+                    <input type="text" name="username" class="form-control" value="{{ usuario.username or '' }}" required>
+                </div>
+                <div class="span-4">
+                    <label class="form-label">Nova senha</label>
+                    <input type="password" name="senha" class="form-control" placeholder="Deixe em branco para manter a atual">
+                </div>
+
+                <div class="span-3">
+                    <label class="form-label">Perfil</label>
+                    <select name="perfil" class="form-select">
+                        <option value="atendente" {% if usuario.perfil == 'atendente' %}selected{% endif %}>Atendente</option>
+                        <option value="admin" {% if usuario.perfil == 'admin' %}selected{% endif %}>Administrador</option>
+                    </select>
+                </div>
+                <div class="span-3">
+                    <label class="form-label">% desconto maximo</label>
+                    <input type="number" step="0.01" min="0" name="desconto_maximo_percentual" class="form-control" value="{{ usuario.desconto_maximo_percentual or 0 }}">
+                </div>
+                <div class="span-3 d-flex align-items-end">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" name="ativo" class="form-check-input" {% if usuario.ativo %}checked{% endif %}>
+                        <label class="form-check-label">Usuario ativo</label>
+                    </div>
+                </div>
+                <div class="span-3 d-flex align-items-end gap-2">
+                    <button class="btn btn-dark w-100">Salvar alteracoes</button>
+                    <a href="{{ url_for('usuarios') }}" class="btn btn-outline-secondary w-100">Cancelar</a>
+                </div>
+
+                <div class="span-6">
+                    <div class="permission-panel">
+                        <h6 class="mb-3">Politicas de venda</h6>
+                        <div class="permission-grid">
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="pode_vender_abaixo_custo" class="form-check-input" {% if usuario.pode_vender_abaixo_custo %}checked{% endif %}>
+                                    <label class="form-check-label">Vender abaixo do custo</label>
+                                </div>
+                                <small>Libera concluir venda mesmo abaixo do custo do produto.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_editar_venda" class="form-check-input" {% if usuario.permite_editar_venda %}checked{% endif %}>
+                                    <label class="form-check-label">Editar venda</label>
+                                </div>
+                                <small>Autoriza alterar itens, descontos e pagamentos de vendas ativas.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_estornar_venda" class="form-check-input" {% if usuario.permite_estornar_venda %}checked{% endif %}>
+                                    <label class="form-check-label">Estornar venda</label>
+                                </div>
+                                <small>Marca a venda como estornada e devolve o estoque dos itens.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_excluir_venda" class="form-check-input" {% if usuario.permite_excluir_venda %}checked{% endif %}>
+                                    <label class="form-check-label">Excluir venda</label>
+                                </div>
+                                <small>Remove a venda em definitivo com seus registros relacionados.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="span-6">
+                    <div class="permission-panel">
+                        <h6 class="mb-3">Acesso e operacao</h6>
+                        <div class="permission-grid">
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_login_multiplo" class="form-check-input" {% if usuario.permite_login_multiplo %}checked{% endif %}>
+                                    <label class="form-check-label">Login multiplo</label>
+                                </div>
+                                <small>Permite manter sessao aberta em mais de um dispositivo ao mesmo tempo.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_inventario" class="form-check-input" {% if usuario.permite_inventario %}checked{% endif %}>
+                                    <label class="form-check-label">Fazer inventario</label>
+                                </div>
+                                <small>Libera ajustes manuais de estoque para contagem, conferencia e inventario.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

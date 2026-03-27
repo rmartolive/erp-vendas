@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Edição de Cliente</h2>
+        <a href="{{ url_for('pessoas') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Editar cliente</strong>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo{% if config.cliente_tipo_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <select name="tipo" class="form-select">
+                            <option value="FISICA" {% if pessoa.tipo == 'FISICA' %}selected{% endif %}>Física</option>
+                            <option value="JURIDICA" {% if pessoa.tipo == 'JURIDICA' %}selected{% endif %}>Jurídica</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Nome{% if config.cliente_nome_obrigatorio or not config %} <span class="required-mark">*</span>{% endif %}</label>
+                        <input type="text" name="nome" class="form-control" value="{{ pessoa.nome or '' }}" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">CPF / CNPJ{% if config.cliente_documento_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <input type="text" name="documento" class="form-control" value="{{ pessoa.documento or '' }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Telefone{% if config.cliente_telefone_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <input type="text" name="telefone" class="form-control" value="{{ pessoa.telefone or '' }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">E-mail{% if config.cliente_email_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <input type="email" name="email" class="form-control" value="{{ pessoa.email or '' }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">CEP{% if config.cliente_cep_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <input type="text" name="cep" class="form-control" value="{{ pessoa.cep or '' }}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Endereço{% if config.cliente_endereco_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <input type="text" name="endereco" class="form-control" value="{{ pessoa.endereco or '' }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Cidade{% if config.cliente_cidade_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <input type="text" name="cidade" class="form-control" value="{{ pessoa.cidade or '' }}">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">UF{% if config.cliente_estado_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <input type="text" name="estado" maxlength="2" class="form-control" value="{{ pessoa.estado or '' }}">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label">Observações{% if config.cliente_observacoes_obrigatorio %} <span class="required-mark">*</span>{% endif %}</label>
+                        <textarea name="observacoes" class="form-control">{{ pessoa.observacoes or '' }}</textarea>
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check">
+                            <input type="checkbox" name="ativo" class="form-check-input" {% if pessoa.ativo %}checked{% endif %}>
+                            <label class="form-check-label">Ativo</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 d-flex align-items-end gap-2">
+                        <button class="btn btn-dark w-100">
+                            <i class="bi bi-save"></i> Salvar
+                        </button>
+                        <a href="{{ url_for('pessoas') }}" class="btn btn-secondary w-100">Cancelar</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

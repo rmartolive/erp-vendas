@@ -3,11 +3,50 @@
 {% block topbar_title %}Vendas{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Vendas</h3>
+    <div>
+        <h3 class="mb-0">Vendas</h3>
+        {% if cliente_id and cliente_nome %}
+        <div class="text-muted small">Filtrado por cliente: {{ cliente_nome }}</div>
+        {% endif %}
+    </div>
     <a href="{{ url_for('vendas_nova') }}" class="btn btn-primary">Nova venda</a>
 </div>
 
-<div class="card shadow-sm">
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white">
+        <strong>Filtros</strong>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Cliente</label>
+                <select name="cliente_id" class="form-select">
+                    <option value="">Todos</option>
+                    {% for cliente in clientes %}
+                    <option value="{{ cliente.id }}" {% if cliente_id == cliente.id %}selected{% endif %}>{{ cliente.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Data inicial</label>
+                <input type="date" name="data_ini" class="form-control" value="{{ data_ini }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Data final</label>
+                <input type="date" name="data_fim" class="form-control" value="{{ data_fim }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button class="btn btn-dark w-100">Filtrar</button>
+                <a href="{{ url_for('vendas') }}" class="btn btn-outline-secondary w-100">Limpar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white">
+        <strong>Listagem de vendas</strong>
+    </div>
     <div class="card-body table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead>
@@ -19,6 +58,8 @@
                     <th>Parcelas</th>
                     <th>Bruto</th>
                     <th>Líquido</th>
+                    <th>Status</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -31,9 +72,32 @@
                     <td>{{ venda.parcelas or 1 }}</td>
                     <td>R$ {{ '%.2f'|format((venda.valor_bruto or 0)|float) }}</td>
                     <td>R$ {{ '%.2f'|format((venda.valor_liquido or 0)|float) }}</td>
+                    <td>
+                        {% if venda.status == 'ESTORNADA' %}
+                        <span class="badge bg-danger">Estornada</span>
+                        {% else %}
+                        <span class="badge bg-success">Ativa</span>
+                        {% endif %}
+                    </td>
+                    <td class="d-flex flex-wrap gap-2">
+                        {% if permite_editar_venda and venda.status == 'ESTORNADA' %}
+                        <a href="{{ url_for('vendas_editar', venda_id=venda.id) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                        {% endif %}
+                        {% if permite_estornar_venda and venda.status != 'ESTORNADA' %}
+                        <form method="POST" action="{{ url_for('vendas_estornar', venda_id=venda.id) }}" class="d-inline" onsubmit="return confirm('Confirma o estorno desta venda? O estoque será devolvido.');">
+                            <input type="hidden" name="motivo_estorno" value="Estorno manual pela listagem de vendas">
+                            <button class="btn btn-sm btn-outline-warning">Estornar</button>
+                        </form>
+                        {% endif %}
+                        {% if permite_excluir_venda and venda.status == 'ESTORNADA' %}
+                        <form method="POST" action="{{ url_for('vendas_excluir', venda_id=venda.id) }}" class="d-inline" onsubmit="return confirm('Confirma a exclusão definitiva desta venda?');">
+                            <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                        </form>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="7" class="text-center text-muted py-4">Nenhuma venda cadastrada.</td></tr>
+                <tr><td colspan="9" class="text-center text-muted py-4">Nenhuma venda cadastrada.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

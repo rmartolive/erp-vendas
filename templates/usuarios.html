@@ -1,124 +1,222 @@
 {% extends "base.html" %}
-
+{% block title %}Usuarios{% endblock %}
+{% block topbar_title %}Usuarios{% endblock %}
 {% block content %}
-<div class="container-fluid">
+<style>
+    .users-shell { display: grid; gap: 1rem; }
+    .users-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+    .users-subtitle { color: #6c757d; margin: 0; }
+    .users-form-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1rem; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-6 { grid-column: span 6; }
+    .span-12 { grid-column: span 12; }
+    .permission-panel {
+        border: 1px solid #e9ecef;
+        border-radius: 1rem;
+        padding: 1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+        height: 100%;
+    }
+    .permission-panel h6 { margin-bottom: .75rem; }
+    .permission-grid { display: grid; gap: .75rem; }
+    .permission-item {
+        border: 1px solid #edf0f2;
+        border-radius: .85rem;
+        padding: .85rem .9rem;
+        background: #fff;
+    }
+    .permission-item .form-check { margin: 0; }
+    .permission-item small { display: block; color: #6c757d; margin-top: .25rem; }
+    .badge-cloud { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .table-card { border: 1px solid #e9ecef; border-radius: 1rem; overflow: hidden; }
+    .table-card .table { margin: 0; }
+    .table-card thead th {
+        background: #f8f9fa;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #6c757d;
+    }
+    @media (max-width: 991px) {
+        .users-header { flex-direction: column; align-items: stretch; }
+        .users-form-grid { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .span-3, .span-4, .span-6, .span-12 { grid-column: auto; }
+    }
+</style>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Usuários</h2>
-    </div>
-
-    <!-- FORM CADASTRO -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white">
-            <strong>Novo usuário</strong>
-        </div>
-        <div class="card-body">
-
-            <form method="POST" action="/usuarios/novo">
-                <div class="row g-3">
-
-                    <div class="col-md-4">
-                        <label class="form-label">Nome</label>
-                        <input type="text" name="nome" class="form-control" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Usuário</label>
-                        <input type="text" name="username" class="form-control" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Senha</label>
-                        <input type="password" name="senha" class="form-control" required>
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">Perfil</label>
-                        <select name="perfil" class="form-select">
-                            <option value="atendente">Atendente</option>
-                            <option value="admin">Administrador</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-3 d-flex align-items-end">
-                        <div class="form-check">
-                            <input type="checkbox" name="ativo" class="form-check-input" checked>
-                            <label class="form-check-label">Ativo</label>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button class="btn btn-dark w-100">
-                            <i class="bi bi-save"></i> Salvar
-                        </button>
-                    </div>
-
-                </div>
-            </form>
-
+<div class="users-shell">
+    <div class="users-header">
+        <div>
+            <h3 class="mb-1">Usuarios</h3>
+            <p class="users-subtitle">Gerencie acessos, limites de desconto e permissoes operacionais da equipe.</p>
         </div>
     </div>
 
-    <!-- TABELA -->
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white">
-            <strong>Lista de usuários</strong>
+            <strong>Novo usuario</strong>
         </div>
         <div class="card-body">
+            <form method="POST" action="{{ url_for('usuarios_novo') }}" class="users-form-grid">
+                <div class="span-4">
+                    <label class="form-label">Nome</label>
+                    <input type="text" name="nome" class="form-control" required>
+                </div>
+                <div class="span-4">
+                    <label class="form-label">Usuario</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="span-4">
+                    <label class="form-label">Senha</label>
+                    <input type="password" name="senha" class="form-control" required>
+                </div>
 
+                <div class="span-3">
+                    <label class="form-label">Perfil</label>
+                    <select name="perfil" class="form-select">
+                        <option value="atendente">Atendente</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="span-3">
+                    <label class="form-label">% desconto maximo</label>
+                    <input type="number" step="0.01" min="0" name="desconto_maximo_percentual" class="form-control" value="0">
+                </div>
+                <div class="span-3 d-flex align-items-end">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" name="ativo" class="form-check-input" checked>
+                        <label class="form-check-label">Usuario ativo</label>
+                    </div>
+                </div>
+                <div class="span-3 d-flex align-items-end">
+                    <button class="btn btn-dark w-100">Salvar usuario</button>
+                </div>
+
+                <div class="span-6">
+                    <div class="permission-panel">
+                        <h6 class="mb-3">Politicas de venda</h6>
+                        <div class="permission-grid">
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="pode_vender_abaixo_custo" class="form-check-input">
+                                    <label class="form-check-label">Vender abaixo do custo</label>
+                                </div>
+                                <small>Permite fechar venda mesmo quando o valor unitario estiver abaixo do custo do produto.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_editar_venda" class="form-check-input">
+                                    <label class="form-check-label">Editar venda</label>
+                                </div>
+                                <small>Autoriza alterar cliente, itens, descontos e pagamentos de uma venda ativa.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_estornar_venda" class="form-check-input">
+                                    <label class="form-check-label">Estornar venda</label>
+                                </div>
+                                <small>Marca a venda como estornada e devolve o estoque dos itens.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_excluir_venda" class="form-check-input">
+                                    <label class="form-check-label">Excluir venda</label>
+                                </div>
+                                <small>Remove a venda definitivamente e apaga seus registros vinculados.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="span-6">
+                    <div class="permission-panel">
+                        <h6 class="mb-3">Acesso e operacao</h6>
+                        <div class="permission-grid">
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_login_multiplo" class="form-check-input" checked>
+                                    <label class="form-check-label">Login multiplo</label>
+                                </div>
+                                <small>Permite que o mesmo usuario permaneça logado em mais de um dispositivo ao mesmo tempo.</small>
+                            </div>
+                            <div class="permission-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" name="permite_inventario" class="form-check-input">
+                                    <label class="form-check-label">Fazer inventario</label>
+                                </div>
+                                <small>Autoriza ajustes manuais de estoque em processos de inventario e conferencia.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <strong>Lista de usuarios</strong>
+        </div>
+        <div class="card-body">
             {% if usuarios %}
-            <div class="table-responsive">
+            <div class="table-responsive table-card">
                 <table class="table table-hover align-middle">
-
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Nome</th>
-                            <th>Usuário</th>
+                            <th>Usuario</th>
                             <th>Perfil</th>
+                            <th>Desconto max.</th>
+                            <th>Permissoes</th>
                             <th>Status</th>
-                            <th>Criado em</th>
+                            <th>Acoes</th>
                         </tr>
                     </thead>
-
                     <tbody>
                         {% for u in usuarios %}
                         <tr>
                             <td>{{ u.id }}</td>
                             <td>{{ u.nome }}</td>
                             <td>{{ u.username }}</td>
-
                             <td>
                                 {% if u.perfil == 'admin' %}
-                                    <span class="badge bg-danger">Admin</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Administrador</span>
                                 {% else %}
-                                    <span class="badge bg-secondary">Atendente</span>
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Atendente</span>
                                 {% endif %}
                             </td>
-
+                            <td>{{ "%.2f"|format(u.desconto_maximo_percentual or 0) }}%</td>
+                            <td>
+                                <div class="badge-cloud">
+                                    {% if u.pode_vender_abaixo_custo %}<span class="badge bg-warning text-dark">Abaixo do custo</span>{% endif %}
+                                    {% if u.permite_login_multiplo %}<span class="badge bg-info text-dark">Multi login</span>{% endif %}
+                                    {% if u.permite_editar_venda %}<span class="badge bg-dark">Editar venda</span>{% endif %}
+                                    {% if u.permite_estornar_venda %}<span class="badge bg-primary">Estorno</span>{% endif %}
+                                    {% if u.permite_excluir_venda %}<span class="badge bg-danger">Excluir venda</span>{% endif %}
+                                    {% if u.permite_inventario %}<span class="badge bg-success">Inventario</span>{% endif %}
+                                </div>
+                            </td>
                             <td>
                                 {% if u.ativo %}
-                                    <span class="badge bg-success">Ativo</span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Ativo</span>
                                 {% else %}
-                                    <span class="badge bg-danger">Inativo</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inativo</span>
                                 {% endif %}
                             </td>
-
-                            <td>{{ u.created_at }}</td>
+                            <td>
+                                <a href="{{ url_for('usuarios_editar', usuario_id=u.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
-
                 </table>
             </div>
             {% else %}
-                <div class="alert alert-info mb-0">
-                    Nenhum usuário cadastrado.
-                </div>
+            <div class="alert alert-info mb-0">Nenhum usuario cadastrado.</div>
             {% endif %}
-
         </div>
     </div>
-
 </div>
 {% endblock %}
